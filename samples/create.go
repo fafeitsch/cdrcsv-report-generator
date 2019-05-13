@@ -1,7 +1,6 @@
 package samples
 
 import (
-	"encoding/csv"
 	"fmt"
 	"io"
 )
@@ -31,26 +30,9 @@ type cdrCsvRecord struct {
 	uniqueId    string
 }
 
-func (c *cdrCsvRecord) toSlice() []string {
-	return []string{
-		"\"" + c.accountcode + "\"",
-		"\"" + c.src + "\"",
-		"\"" + c.dst + "\"",
-		"\"" + c.dcontext + "\"",
-		"\"" + c.callerId + "\"",
-		"\"" + c.channel + "\"",
-		"\"" + c.dstChannel + "\"",
-		"\"" + c.lastApp + "\"",
-		"\"" + c.lastData + "\"",
-		"\"" + c.start + "\"",
-		"\"" + c.end + "\"",
-		"\"" + c.duration + "\"",
-		"\"" + c.billsec + "\"",
-		"\"" + string(c.disposition) + "\"",
-		"\"" + string(c.amaFlag) + "\"",
-		"\"" + c.userfield + "\"",
-		"\"" + c.uniqueId + "\"",
-	}
+func (c *cdrCsvRecord) toCsvString() string {
+	return "\"" + c.accountcode +
+		"\",\"" + c.src + "\",\"" + c.dst + "\",\"" + c.dcontext + "\",\"" + c.callerId + "\",\"" + c.channel + "\",\"" + c.dstChannel + "\",\"" + c.lastApp + "\",\"" + c.lastData + "\",\"" + c.start + "\",\"" + c.answer + "\",\"" + c.end + "\"," + c.duration + "," + c.billsec + ",\"" + string(c.disposition) + "\",\"" + string(c.amaFlag) + "\",\"" + c.userfield + "\",\"" + c.uniqueId + "\""
 }
 
 type callState string
@@ -73,7 +55,6 @@ const (
 )
 
 func Create(options *Options, out io.Writer) error {
-	csvWriter := csv.NewWriter(out)
 	for i := 0; i < options.Count; i++ {
 		record := cdrCsvRecord{
 			accountcode: "",
@@ -95,11 +76,10 @@ func Create(options *Options, out io.Writer) error {
 			userfield:   "",
 			uniqueId:    "2265436.50",
 		}
-		err := csvWriter.Write(record.toSlice())
+		_, err := io.WriteString(out, record.toCsvString()+"\n")
 		if err != nil {
-			return fmt.Errorf("could not export record %v: %v", record.toSlice(), err)
+			return fmt.Errorf("could not export record %v: %v", record.toCsvString(), err)
 		}
 	}
-	csvWriter.Flush()
 	return nil
 }
