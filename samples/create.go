@@ -7,9 +7,10 @@ import (
 )
 
 type Options struct {
-	Count    int
-	Contacts []SampleContact
-	Seed     int64
+	Count             int
+	Contacts          []SampleContact
+	Seed              int64
+	CompanyExtensions []string
 }
 
 type SampleContact struct {
@@ -79,7 +80,7 @@ func Create(options *Options, out io.Writer) error {
 		}
 		caller := options.Contacts[callerIndex]
 		callee := options.Contacts[calleeIndex]
-		record := createRecord(caller, callee, random)
+		record := createRecord(caller, callee, random, options)
 		_, err := io.WriteString(out, record.toCsvString()+"\n")
 		if err != nil {
 			return fmt.Errorf("could not export record %v: %v", record.toCsvString(), err)
@@ -88,7 +89,7 @@ func Create(options *Options, out io.Writer) error {
 	return nil
 }
 
-func createRecord(caller SampleContact, callee SampleContact, rnd *rand.Rand) cdrCsvRecord {
+func createRecord(caller SampleContact, callee SampleContact, rnd *rand.Rand, options *Options) cdrCsvRecord {
 	record := cdrCsvRecord{}
 	record.accountcode = ""
 	if caller.isEmployee {
@@ -104,6 +105,9 @@ func createRecord(caller SampleContact, callee SampleContact, rnd *rand.Rand) cd
 	}
 	if callee.isEmployee {
 		record.dst = callee.internalExtension
+		if !caller.isEmployee {
+			record.dst = options.CompanyExtensions[rnd.Intn(len(options.CompanyExtensions))]
+		}
 		record.dstChannel = fmt.Sprintf("%s-0000%d", callee.internalPhone, rnd.Intn(100))
 		record.lastData = fmt.Sprintf("SIP/%s", callee.internalPhone)
 	} else {
@@ -111,6 +115,7 @@ func createRecord(caller SampleContact, callee SampleContact, rnd *rand.Rand) cd
 		record.dstChannel = fmt.Sprintf("to_public-0000%d", rnd.Intn(100))
 		record.lastData = fmt.Sprintf("SIP/%s@to_public", callee.externalExtension)
 	}
+	record.lastApp = "DIAL"
 	record.start = "2019-05-09 08:06:11"
 	record.answer = "2019-05-09 08:06:30"
 	record.end = "2019-05-09 08:30:12"

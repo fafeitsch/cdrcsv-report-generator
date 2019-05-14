@@ -3,24 +3,59 @@ package samples
 import (
 	"bufio"
 	"bytes"
+	"os"
 	"testing"
 )
 
 func TestCreate(t *testing.T) {
-	options := Options{Count: 10}
+	johnDoe := SampleContact{
+		firstName:         "John",
+		lastName:          "Doe",
+		externalExtension: "4711",
+		internalExtension: "12",
+		isEmployee:        true,
+		internalPhone:     "PHONE_1",
+	}
+	janeFox := SampleContact{
+		firstName:         "Jane",
+		lastName:          "Fox",
+		externalExtension: "0815",
+		internalExtension: "14",
+		isEmployee:        false,
+		internalPhone:     "PHONE_2",
+	}
+	judithQuestion := SampleContact{
+		firstName:         "Judith",
+		lastName:          "Queston",
+		externalExtension: "2356",
+		internalExtension: "15",
+		isEmployee:        true,
+		internalPhone:     "PHONE_3",
+	}
+	options := Options{
+		Count:             10,
+		Contacts:          []SampleContact{johnDoe, janeFox, judithQuestion},
+		Seed:              23,
+		CompanyExtensions: []string{"0923526332", "0923526333"},
+	}
 	writer := new(bytes.Buffer)
 	err := Create(&options, writer)
 	if err != nil {
 		t.Errorf("Creating threw unexpected error: %v", err)
 	}
-	reader := bufio.NewReader(writer)
-	expectedLine := "\"\",\"4711\",\"0815\",\"from_public\",\"\"John Doe\" <4711>\",\"SIP/from_public-0000012\",\"SIP/deskphone_of_boss_000015a\",\"DIAL\",\"SIP/deskphone_of_boss\",\"2019-05-09 08:06:11\",\"2019-05-09 08:06:30\",\"2019-05-09 08:30:12\",1441,1422,\"ANSWERED\",\"DOCUMENTATION\",\"\",\"2265436.50\"\n"
+	actualReader := bufio.NewReader(writer)
+	fileReader, _ := os.Open("create_test_cdr.csv")
+	defer func() {
+		_ = fileReader.Close()
+	}()
+	expectedReader := bufio.NewReader(fileReader)
 	for i := 0; i < options.Count; i++ {
-		line, _ := reader.ReadString('\n')
-		if line == "" {
+		actualLine, _ := actualReader.ReadString('\n')
+		expectedLine, _ := expectedReader.ReadString('\n')
+		if actualLine == "" {
 			t.Errorf("Line %d is empty", i)
-		} else if line != expectedLine {
-			t.Errorf("Line %d differs (expected vs. actual):\n%s\n%s", i, expectedLine, line)
+		} else if actualLine != expectedLine {
+			t.Errorf("Line %d differs (expected vs. actual):\n%s\n%s", i, expectedLine, actualLine)
 		}
 	}
 }
