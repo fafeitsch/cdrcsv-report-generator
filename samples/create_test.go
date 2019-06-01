@@ -38,12 +38,12 @@ func TestCreate(t *testing.T) {
 		Seed:              23,
 		CompanyExtensions: []string{"0923526332", "0923526333"},
 	}
-	writer := new(bytes.Buffer)
-	err := Create(&options, writer)
+	writer := bytes.Buffer{}
+	err := Create(&options, &writer)
 	if err != nil {
 		t.Errorf("Creating threw unexpected error: %v", err)
 	}
-	actualReader := bufio.NewReader(writer)
+	actualReader := bufio.NewReader(&writer)
 	fileReader, _ := os.Open("create_test_cdr.csv")
 	defer func() {
 		_ = fileReader.Close()
@@ -55,7 +55,7 @@ func TestCreate(t *testing.T) {
 		if actualLine == "" {
 			t.Errorf("Line %d is empty", i)
 		} else if actualLine != expectedLine {
-			t.Errorf("Line %d differs (expected vs. actual):\n%s\n%s", i, expectedLine, actualLine)
+			t.Errorf("Line %d differs (expected vs. actual):\n%s%s", i, expectedLine, actualLine)
 		}
 	}
 }

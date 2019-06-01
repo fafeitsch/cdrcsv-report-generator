@@ -5,6 +5,7 @@ import (
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"io"
 	"math/rand"
+	"strconv"
 )
 
 type Options struct {
@@ -49,7 +50,7 @@ func createRecord(caller SampleContact, callee SampleContact, rnd *rand.Rand, op
 	record.Accountcode = ""
 	if caller.isEmployee {
 		record.Src = caller.internalExtension
-		record.CallerId = fmt.Sprintf("%s %s <%s>", caller.firstName, caller.lastName, caller.internalExtension)
+		record.CallerId = fmt.Sprintf("\"%s %s\" <%s>", caller.firstName, caller.lastName, caller.internalExtension)
 		record.Dcontext = "internal"
 		record.Channel = fmt.Sprintf("internal-0000%d", rnd.Intn(100))
 	} else {
@@ -79,6 +80,6 @@ func createRecord(caller SampleContact, callee SampleContact, rnd *rand.Rand, op
 	record.Disposition = cdrcsv.ANSWERED
 	record.AmaFlag = cdrcsv.DOCUMENTATION
 	record.Userfield = ""
-	record.UniqueId = string(rnd.Int63())
+	record.UniqueId = strconv.Itoa(rand.Intn(1250))
 	return record
 }
