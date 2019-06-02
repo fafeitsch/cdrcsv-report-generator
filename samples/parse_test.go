@@ -44,6 +44,6 @@ func TestParseCsv(t *testing.T) {
 	csv = csv + "\none,colomn,too,many,for,the,parser"
 	_, err = ParseCsv(strings.NewReader(csv), true)
 	if err == nil {
-		t.Errorf("Expected error when number of columns is wrong, but no error was returned")
+		t.Errorf("Expected error when extension of columns is wrong, but no error was returned")
 	}
 }

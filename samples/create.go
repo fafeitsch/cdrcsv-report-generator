@@ -26,7 +26,7 @@ type SampleContact struct {
 
 func Create(options *Options, out io.Writer) error {
 	if len(options.Contacts) < 2 {
-		return fmt.Errorf("number of contacts is smaller than 2")
+		return fmt.Errorf("extension of contacts is smaller than 2")
 	}
 	records := make([]cdrcsv.Record, 0, options.Count)
 	random := rand.New(rand.NewSource(options.Seed))

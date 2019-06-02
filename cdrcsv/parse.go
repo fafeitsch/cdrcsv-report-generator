@@ -29,6 +29,7 @@ type Record struct {
 }
 
 func (c *Record) ToCsvString() string {
+	//TODO: escape all fields, not only the caller id
 	escapedCallerId := strings.ReplaceAll(c.CallerId, "\"", "\"\"")
 	return "\"" + c.Accountcode +
 		"\",\"" + c.Src + "\",\"" + c.Dst + "\",\"" + c.Dcontext + "\",\"" + escapedCallerId + "\",\"" + c.Channel + "\",\"" + c.DstChannel + "\",\"" + c.LastApp + "\",\"" + c.LastData + "\",\"" + c.Start + "\",\"" + c.Answer + "\",\"" + c.End + "\"," + c.Duration + "," + c.Billsec + ",\"" + string(c.Disposition) + "\",\"" + string(c.AmaFlag) + "\",\"" + c.Userfield + "\",\"" + c.UniqueId + "\""
