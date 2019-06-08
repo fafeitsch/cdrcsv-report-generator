@@ -28,7 +28,7 @@ func Create(options *Options, out io.Writer) error {
 	if len(options.Contacts) < 2 {
 		return fmt.Errorf("extension of contacts is smaller than 2")
 	}
-	records := make([]cdrcsv.Record, 0, options.Count)
+	records := make([]*cdrcsv.Record, 0, options.Count)
 	random := rand.New(rand.NewSource(options.Seed))
 	for i := 0; i < options.Count; i++ {
 		callerIndex := random.Intn(len(options.Contacts))
@@ -39,7 +39,7 @@ func Create(options *Options, out io.Writer) error {
 		caller := options.Contacts[callerIndex]
 		callee := options.Contacts[calleeIndex]
 		record := createRecord(caller, callee, random, options)
-		records = append(records, record)
+		records = append(records, &record)
 	}
 	cdrFile := cdrcsv.File{Records: records}
 	return cdrFile.WriteAsCsvWithoutHeader(out)

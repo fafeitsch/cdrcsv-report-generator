@@ -20,28 +20,89 @@ func (i *IdentityTimeShifter) shiftTime(time time.Time) time.Time {
 	return time
 }
 
-func pseudoymify(cdrs []cdrcsv.File, pseudoContacts []Participant, pseudoContexts []string) error {
-	participants := findParticipants(cdrs)
-	if len(pseudoContacts) < len(participants) {
-		return errors.New(fmt.Sprintf("number of pseudo contacts is not sufficient, at least %d are needed, only %d were provided", len(participants), len(pseudoContacts)))
+type PseudoData struct {
+	Participants []Participant
+	Contexts     []string
+}
+
+type Settings struct {
+	TimeShifter  TimeShifter
+	HideAppData  bool
+	HideChannels bool
+}
+
+func pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) error {
+	participants := findParticipants(*cdrs)
+	if len(pseudo.Participants) < len(participants) {
+		return errors.New(fmt.Sprintf("number of pseudo contacts is not sufficient, at least %d are needed, only %d were provided", len(participants), len(pseudo.Participants)))
 	}
-	contexts := findContexts(cdrs)
-	if len(pseudoContexts) < len(contexts) {
-		return errors.New(fmt.Sprintf("number of pseudo contexts is not sufficient, at least %d are needed, only %d were provided", len(contexts), len(pseudoContexts)))
+	contexts := findContexts(*cdrs)
+	if len(pseudo.Contexts) < len(contexts) {
+		return errors.New(fmt.Sprintf("number of pseudo contexts is not sufficient, at least %d are needed, only %d were provided", len(contexts), len(pseudo.Contexts)))
 	}
 	participantMapping := make(map[Participant]Participant)
 	for index, participant := range participants {
-		participantMapping[participant] = pseudoContacts[index]
+		participantMapping[participant] = pseudo.Participants[index]
 	}
 	contextMapping := make(map[string]string)
 	for index, context := range contexts {
-		contextMapping[context] = pseudoContexts[index]
+		contextMapping[context] = pseudo.Contexts[index]
 	}
-	for _, file := range cdrs {
+	if settings.TimeShifter == (TimeShifter)(nil) {
+		settings.TimeShifter = &IdentityTimeShifter{}
+	}
+	for _, file := range *cdrs {
 		for _, record := range file.Records {
-			_ = callerIdToParticipant(record.CallerId)
+			caller := callerIdToParticipant(record.CallerId)
+			pseudoCaller := participantMapping[caller]
+			record.CallerId = pseudoCaller.toCallerId()
+			srcParticipant, _ := findParticipantByExtension(participants, record.Src)
+			pseudoSrc := participantMapping[srcParticipant]
+			record.Src = pseudoSrc.Extension
+
+			dstParticipant, _ := findParticipantByExtension(participants, record.Dst)
+			pseudoDst := participantMapping[dstParticipant]
+			record.Dst = pseudoDst.Extension
+
+			record.Dcontext = contextMapping[record.Dcontext]
+
+			if settings.HideAppData {
+				record.LastData = "NOT_AVAILABLE"
+			}
+			if settings.HideChannels {
+				record.Channel = "NOT_AVAILABLE"
+				record.DstChannel = "NOT_AVAILABLE"
+			}
+
+			start := record.Start
+			if start != "" {
+				startTime, err := time.Parse(cdrcsv.DateFormat, start)
+				if err != nil {
+					return fmt.Errorf("starttime %s could not be parsed: %v", start, err)
+				}
+				record.Start = settings.TimeShifter.shiftTime(startTime).Format(cdrcsv.DateFormat)
+			}
+
+			answered := record.Answer
+			if answered != "" {
+				answeredTime, err := time.Parse(cdrcsv.DateFormat, answered)
+				if err != nil {
+					return fmt.Errorf("answered time %s could not be parsed: %v", answered, err)
+				}
+				record.Answer = settings.TimeShifter.shiftTime(answeredTime).Format(cdrcsv.DateFormat)
+			}
+
+			end := record.End
+			if end != "" {
+				endTime, err := time.Parse(cdrcsv.DateFormat, end)
+				if err != nil {
+					return fmt.Errorf("end time %s could not be parsed: %v", end, err)
+				}
+				record.End = settings.TimeShifter.shiftTime(endTime).Format(cdrcsv.DateFormat)
+			}
 		}
 	}
+	return nil
 }
 
 func callerIdToParticipant(callerId string) Participant {
@@ -51,9 +112,22 @@ func callerIdToParticipant(callerId string) Participant {
 	return Participant{Name: name, Extension: extension}
 }
 
+func findParticipantByExtension(participants []Participant, extension string) (Participant, error) {
+	for _, participant := range participants {
+		if participant.Extension == extension {
+			return participant, nil
+		}
+	}
+	return Participant{}, errors.New(fmt.Sprintf("could not find a participant with extension %s", extension))
+}
+
 type Participant struct {
 	Name      string
 	Extension string
+}
+
+func (p *Participant) toCallerId() string {
+	return fmt.Sprintf("\"%s\"<%s>", p.Name, p.Extension)
 }
 
 func findParticipants(cdrs []cdrcsv.File) []Participant {
@@ -89,7 +163,10 @@ func findParticipants(cdrs []cdrcsv.File) []Participant {
 			result = append(result, Participant{Name: "", Extension: record.Dst})
 		}
 	}
-	sort.Slice(result, func(i, j) bool {
+	sort.Slice(result, func(i int, j int) bool {
+		if result[i].Name == result[j].Name {
+			return result[i].Extension < result[j].Extension
+		}
 		return result[i].Name < result[j].Name
 	})
 	return result

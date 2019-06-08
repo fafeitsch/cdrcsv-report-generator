@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+const (
+	DateFormat = "2006-01-02 15:04:05"
+)
+
 type Record struct {
 	Accountcode string
 	Src         string
@@ -36,7 +40,7 @@ func (c *Record) ToCsvString() string {
 }
 
 type File struct {
-	Records []Record
+	Records []*Record
 }
 
 //WriteAsCsvWithoutHeader writes a CDR file in CSV format to the specified writer.
@@ -52,13 +56,13 @@ func (f *File) WriteAsCsvWithoutHeader(writer io.Writer) error {
 }
 
 //ReadWithoutHeader reads a CDR csv-file from the specified reader and returns the record file.
-func ReadWithoutHeader(reader io.Reader) (*File, error) {
+func ReadWithoutHeader(reader io.Reader) (File, error) {
 	csvReader := csv.NewReader(reader)
 	lines, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("could not read csv records: %v", err)
+		return File{}, fmt.Errorf("could not read csv records: %v", err)
 	}
-	result := make([]Record, 0, len(lines))
+	result := make([]*Record, 0, len(lines))
 	for _, line := range lines {
 		record := Record{}
 		record.Accountcode = line[0]
@@ -79,9 +83,9 @@ func ReadWithoutHeader(reader io.Reader) (*File, error) {
 		record.AmaFlag = AmaFlag(line[15])
 		record.Userfield = line[16]
 		record.UniqueId = line[17]
-		result = append(result, record)
+		result = append(result, &record)
 	}
-	return &File{Records: result}, nil
+	return File{Records: result}, nil
 }
 
 type CallState string
