@@ -13,11 +13,15 @@ type TimeShifter interface {
 	shiftTime(time.Time) time.Time
 }
 
-type IdentityTimeShifter struct {
+type NaturalTimeShifter struct {
+	Years   int
+	Days    int
+	Hours   int
+	Minutes int
 }
 
-func (i *IdentityTimeShifter) shiftTime(time time.Time) time.Time {
-	return time
+func (n *NaturalTimeShifter) shiftTime(t time.Time) time.Time {
+	return t.AddDate(n.Years, 0, n.Days).Add(time.Hour*time.Duration(n.Hours) + time.Minute*time.Duration(n.Minutes))
 }
 
 type PseudoData struct {
@@ -31,7 +35,7 @@ type Settings struct {
 	HideChannels bool
 }
 
-func pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) error {
+func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) error {
 	participants := findParticipants(*cdrs)
 	if len(pseudo.Participants) < len(participants) {
 		return errors.New(fmt.Sprintf("number of pseudo contacts is not sufficient, at least %d are needed, only %d were provided", len(participants), len(pseudo.Participants)))
@@ -40,21 +44,27 @@ func pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) erro
 	if len(pseudo.Contexts) < len(contexts) {
 		return errors.New(fmt.Sprintf("number of pseudo contexts is not sufficient, at least %d are needed, only %d were provided", len(contexts), len(pseudo.Contexts)))
 	}
-	participantMapping := make(map[Participant]Participant)
+	participantMapping := make(map[Participant]*Participant)
 	for index, participant := range participants {
-		participantMapping[participant] = pseudo.Participants[index]
+		participantMapping[participant] = &pseudo.Participants[index]
+		if participant.Name == "" {
+			participantMapping[participant].Name = ""
+		}
 	}
 	contextMapping := make(map[string]string)
 	for index, context := range contexts {
 		contextMapping[context] = pseudo.Contexts[index]
 	}
 	if settings.TimeShifter == (TimeShifter)(nil) {
-		settings.TimeShifter = &IdentityTimeShifter{}
+		settings.TimeShifter = &NaturalTimeShifter{}
 	}
 	for _, file := range *cdrs {
 		for _, record := range file.Records {
 			caller := callerIdToParticipant(record.CallerId)
 			pseudoCaller := participantMapping[caller]
+			if pseudoCaller == nil {
+				return fmt.Errorf("No replacement for caller \"%s\" found, maybe he used two different extensions?", caller.toCallerId())
+			}
 			record.CallerId = pseudoCaller.toCallerId()
 			srcParticipant, _ := findParticipantByExtension(participants, record.Src)
 			pseudoSrc := participantMapping[srcParticipant]
@@ -131,21 +141,17 @@ func (p *Participant) toCallerId() string {
 }
 
 func findParticipants(cdrs []cdrcsv.File) []Participant {
-	//TODO: Document assumption that an Extension is bound to at most one Name
 	result := make([]Participant, 0)
 	distinctExtensions := make(map[string]bool)
-	distinctNames := make(map[string]bool)
 	for _, cdr := range cdrs {
+		participants := make(map[Participant]bool)
 		for _, record := range cdr.Records {
 			participant := callerIdToParticipant(record.CallerId)
-			if _, ok := distinctExtensions[participant.Extension]; ok {
+			if _, ok := participants[participant]; ok {
 				continue
 			}
-			if _, ok := distinctNames[participant.Name]; ok {
-				continue
-			}
+			participants[participant] = true
 			distinctExtensions[participant.Extension] = true
-			distinctNames[participant.Name] = true
 			result = append(result, participant)
 		}
 		for _, record := range cdr.Records {

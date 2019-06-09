@@ -49,7 +49,7 @@ func (f *File) WriteAsCsvWithoutHeader(writer io.Writer) error {
 		line := record.ToCsvString()
 		_, err := io.WriteString(writer, line+"\n")
 		if err != nil {
-			return fmt.Errorf("could not export record %v: %v", record.ToCsvString(), err)
+			return fmt.Errorf("could not export record: %v", err)
 		}
 	}
 	return nil

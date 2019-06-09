@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func ParseCsv(reader io.Reader, hasHeader bool) ([]SampleContact, error) {
+func ParseCsv(reader io.Reader, hasHeader bool) ([]Participant, error) {
 	csvReader := csv.NewReader(reader)
 	lines, err := csvReader.ReadAll()
 	if err != nil {
@@ -16,19 +16,11 @@ func ParseCsv(reader io.Reader, hasHeader bool) ([]SampleContact, error) {
 	if hasHeader {
 		start = 1
 	}
-	result := make([]SampleContact, 0, len(lines))
+	result := make([]Participant, 0, len(lines))
 	for _, line := range lines[start:] {
-		isEmployee := false
-		if line[4] == "true" {
-			isEmployee = true
-		}
-		contact := SampleContact{
-			firstName:         line[0],
-			lastName:          line[1],
-			externalExtension: line[2],
-			internalExtension: line[3],
-			isEmployee:        isEmployee,
-			internalPhone:     line[5],
+		contact := Participant{
+			Name:      line[0] + " " + line[1],
+			Extension: line[2],
 		}
 		result = append(result, contact)
 	}

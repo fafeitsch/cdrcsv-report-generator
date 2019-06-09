@@ -4,6 +4,7 @@ import (
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestPseudonymify(t *testing.T) {
@@ -29,7 +30,7 @@ func TestPseudonymify(t *testing.T) {
 	pseudoContexts := []string{"context1", "context2"}
 	data := PseudoData{Participants: pseudoParticipants, Contexts: pseudoContexts}
 	settings := Settings{HideChannels: true, HideAppData: true}
-	_ = pseudoymify(&[]cdrcsv.File{file}, data, settings)
+	_ = Pseudoymify(&[]cdrcsv.File{file}, data, settings)
 	tmp, _ := os.Create("/tmp/test.csv")
 	file.WriteAsCsvWithoutHeader(tmp)
 	defer tmp.Close()
@@ -94,5 +95,17 @@ func TestFindContexts(t *testing.T) {
 		if context != expectedContexts[index] {
 			t.Errorf("Context at location %d should be %s, but was %s", index, expectedContexts[index], context)
 		}
+	}
+}
+
+func TestShiftTime(t *testing.T) {
+	aDateString := "2019-06-09 10:03:23"
+	aDate, _ := time.Parse(cdrcsv.DateFormat, aDateString)
+
+	shifter := NaturalTimeShifter{}
+	modifiedTime := shifter.shiftTime(aDate)
+
+	if aDateString != modifiedTime.Format(cdrcsv.DateFormat) {
+		t.Errorf("With the default time shifter, the date %s should not be changed, but was changed to %s.", aDateString, modifiedTime.Format(cdrcsv.DateFormat))
 	}
 }
