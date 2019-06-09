@@ -9,14 +9,16 @@ import (
 )
 
 func TestReadWrite(t *testing.T) {
-	csvFile, err := os.Open("../samples/create_test_cdr.csv")
+	csvFile, err := os.Open("../mockdata/cdr.csv")
 	defer csvFile.Close()
 	if err != nil {
 		t.Errorf("error opening the test cdr file: %v", err)
+		return
 	}
 	file, err := ReadWithoutHeader(csvFile)
 	if err != nil {
 		t.Errorf("the csv file could not be parsed: %v", err)
+		return
 	}
 	writer := bytes.Buffer{}
 	err = file.WriteAsCsvWithoutHeader(&writer)
@@ -28,8 +30,10 @@ func TestReadWrite(t *testing.T) {
 		actualLine, err2 := actualReader.ReadString('\n')
 		if err1 != io.EOF && err2 == io.EOF {
 			t.Errorf("actual file is shorter than expected file")
+			break
 		} else if err1 == io.EOF && err2 != io.EOF {
 			t.Errorf("actual file is longer than expected file")
+			break
 		} else if err1 == io.EOF && err2 == io.EOF {
 			break
 		} else if err1 != nil || err2 != nil {

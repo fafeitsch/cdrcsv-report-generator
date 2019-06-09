@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -53,6 +54,17 @@ func (f *File) WriteAsCsvWithoutHeader(writer io.Writer) error {
 		}
 	}
 	return nil
+}
+
+func ReadWithoutHeaderFromFile(filename string) (File, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return File{}, err
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+	return ReadWithoutHeader(file)
 }
 
 //ReadWithoutHeader reads a CDR csv-file from the specified reader and returns the record file.

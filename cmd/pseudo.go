@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
-	"github.com/fafeitsch/open-callopticum/samples"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +27,7 @@ func main() {
 		fmt.Printf("Error: Could not open the pseudo contacts file %s: %v", *contactsPath, err)
 		os.Exit(1)
 	}
-	contacts, err := samples.ParseCsv(contactsFile, false)
+	contacts, err := cdrcsv.ParsePseudoContacts(contactsFile, false)
 	_ = contactsFile.Close()
 	if err != nil {
 		fmt.Printf("Error: The contacts file %s could not be parsed: %v", *contactsPath, err)
@@ -37,10 +36,10 @@ func main() {
 	fmt.Printf("Reading the pseudo contacts successfull.\n")
 
 	contextsSlice := strings.Split(*contexts, ",")
-	data := samples.PseudoData{Participants: contacts, Contexts: contextsSlice}
+	data := cdrcsv.PseudoData{Participants: contacts, Contexts: contextsSlice}
 
-	shifter := samples.NaturalTimeShifter{Hours: *shiftHour, Days: *shiftDay, Years: *shiftYear, Minutes: *shiftMinute}
-	settings := samples.Settings{TimeShifter: &shifter, HideAppData: *hideData, HideChannels: *hideChannels}
+	shifter := cdrcsv.NaturalTimeShifter{Hours: *shiftHour, Days: *shiftDay, Years: *shiftYear, Minutes: *shiftMinute}
+	settings := cdrcsv.Settings{TimeShifter: &shifter, HideAppData: *hideData, HideChannels: *hideChannels}
 
 	fmt.Printf("Reading the cdr files …\n")
 	cdrFiles := make([]cdrcsv.File, 0, len(flag.Args()))
@@ -62,7 +61,7 @@ func main() {
 
 	fmt.Printf("Found %d cdr files.\n", len(cdrFiles))
 
-	err = samples.Pseudoymify(&cdrFiles, data, settings)
+	err = cdrcsv.Pseudonymify(&cdrFiles, data, settings)
 	if err != nil {
 		fmt.Printf("Error. Could not pseudonymify the cdrs: %v", err)
 		os.Exit(1)

@@ -1,9 +1,10 @@
-package samples
+package cdrcsv
 
 import (
+	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/fafeitsch/open-callopticum/cdrcsv"
+	"io"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,7 +37,7 @@ type Settings struct {
 	HideChannels bool
 }
 
-func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) error {
+func Pseudonymify(cdrs *[]File, pseudo PseudoData, settings Settings) error {
 	participants := findParticipants(*cdrs)
 	if len(pseudo.Participants) < len(participants) {
 		return errors.New(fmt.Sprintf("number of pseudo contacts is not sufficient, at least %d are needed, only %d were provided", len(participants), len(pseudo.Participants)))
@@ -84,12 +85,12 @@ func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) erro
 
 			start := record.Start
 			if start != "" {
-				startTime, err := time.Parse(cdrcsv.DateFormat, start)
+				startTime, err := time.Parse(DateFormat, start)
 				if err != nil {
 					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 				}
 				newTime := settings.TimeShifter.shiftTime(startTime)
-				record.Start = newTime.Format(cdrcsv.DateFormat)
+				record.Start = newTime.Format(DateFormat)
 				epoch := strconv.Itoa(int(newTime.Unix()))
 				callId := strings.Split(record.UniqueId, ".")[1]
 				record.UniqueId = epoch + "." + callId
@@ -97,20 +98,20 @@ func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) erro
 
 			answered := record.Answer
 			if answered != "" {
-				answeredTime, err := time.Parse(cdrcsv.DateFormat, answered)
+				answeredTime, err := time.Parse(DateFormat, answered)
 				if err != nil {
 					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 				}
-				record.Answer = settings.TimeShifter.shiftTime(answeredTime).Format(cdrcsv.DateFormat)
+				record.Answer = settings.TimeShifter.shiftTime(answeredTime).Format(DateFormat)
 			}
 
 			end := record.End
 			if end != "" {
-				endTime, err := time.Parse(cdrcsv.DateFormat, end)
+				endTime, err := time.Parse(DateFormat, end)
 				if err != nil {
 					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 				}
-				record.End = settings.TimeShifter.shiftTime(endTime).Format(cdrcsv.DateFormat)
+				record.End = settings.TimeShifter.shiftTime(endTime).Format(DateFormat)
 			}
 		}
 	}
@@ -139,10 +140,10 @@ type Participant struct {
 }
 
 func (p *Participant) toCallerId() string {
-	return fmt.Sprintf("\"%s\"<%s>", p.Name, p.Extension)
+	return fmt.Sprintf("\"%s\" <%s>", p.Name, p.Extension)
 }
 
-func findParticipants(cdrs []cdrcsv.File) []Participant {
+func findParticipants(cdrs []File) []Participant {
 	result := make([]Participant, 0)
 	distinctExtensions := make(map[string]bool)
 	for _, cdr := range cdrs {
@@ -180,7 +181,7 @@ func findParticipants(cdrs []cdrcsv.File) []Participant {
 	return result
 }
 
-func findContexts(cdrs []cdrcsv.File) []string {
+func findContexts(cdrs []File) []string {
 	result := make([]string, 0)
 	set := make(map[string]bool)
 	for _, file := range cdrs {
@@ -195,4 +196,25 @@ func findContexts(cdrs []cdrcsv.File) []string {
 	}
 	sort.Strings(result)
 	return result
+}
+
+func ParsePseudoContacts(reader io.Reader, hasHeader bool) ([]Participant, error) {
+	csvReader := csv.NewReader(reader)
+	lines, err := csvReader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("error reading from csv file: %v", err)
+	}
+	start := 0
+	if hasHeader {
+		start = 1
+	}
+	result := make([]Participant, 0, len(lines))
+	for _, line := range lines[start:] {
+		contact := Participant{
+			Name:      line[0] + " " + line[1],
+			Extension: line[2],
+		}
+		result = append(result, contact)
+	}
+	return result, nil
 }
