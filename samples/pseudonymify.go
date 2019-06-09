@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -58,13 +59,10 @@ func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) erro
 	if settings.TimeShifter == (TimeShifter)(nil) {
 		settings.TimeShifter = &NaturalTimeShifter{}
 	}
-	for _, file := range *cdrs {
-		for _, record := range file.Records {
+	for fileIndex, file := range *cdrs {
+		for recordIndex, record := range file.Records {
 			caller := callerIdToParticipant(record.CallerId)
 			pseudoCaller := participantMapping[caller]
-			if pseudoCaller == nil {
-				return fmt.Errorf("No replacement for caller \"%s\" found, maybe he used two different extensions?", caller.toCallerId())
-			}
 			record.CallerId = pseudoCaller.toCallerId()
 			srcParticipant, _ := findParticipantByExtension(participants, record.Src)
 			pseudoSrc := participantMapping[srcParticipant]
@@ -88,16 +86,20 @@ func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) erro
 			if start != "" {
 				startTime, err := time.Parse(cdrcsv.DateFormat, start)
 				if err != nil {
-					return fmt.Errorf("starttime %s could not be parsed: %v", start, err)
+					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 				}
-				record.Start = settings.TimeShifter.shiftTime(startTime).Format(cdrcsv.DateFormat)
+				newTime := settings.TimeShifter.shiftTime(startTime)
+				record.Start = newTime.Format(cdrcsv.DateFormat)
+				epoch := strconv.Itoa(int(newTime.Unix()))
+				callId := strings.Split(record.UniqueId, ".")[1]
+				record.UniqueId = epoch + "." + callId
 			}
 
 			answered := record.Answer
 			if answered != "" {
 				answeredTime, err := time.Parse(cdrcsv.DateFormat, answered)
 				if err != nil {
-					return fmt.Errorf("answered time %s could not be parsed: %v", answered, err)
+					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 				}
 				record.Answer = settings.TimeShifter.shiftTime(answeredTime).Format(cdrcsv.DateFormat)
 			}
@@ -106,7 +108,7 @@ func Pseudoymify(cdrs *[]cdrcsv.File, pseudo PseudoData, settings Settings) erro
 			if end != "" {
 				endTime, err := time.Parse(cdrcsv.DateFormat, end)
 				if err != nil {
-					return fmt.Errorf("end time %s could not be parsed: %v", end, err)
+					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 				}
 				record.End = settings.TimeShifter.shiftTime(endTime).Format(cdrcsv.DateFormat)
 			}

@@ -36,7 +36,7 @@ func (c *Record) ToCsvString() string {
 	//TODO: escape all fields, not only the caller id
 	escapedCallerId := strings.ReplaceAll(c.CallerId, "\"", "\"\"")
 	return "\"" + c.Accountcode +
-		"\",\"" + c.Src + "\",\"" + c.Dst + "\",\"" + c.Dcontext + "\",\"" + escapedCallerId + "\",\"" + c.Channel + "\",\"" + c.DstChannel + "\",\"" + c.LastApp + "\",\"" + c.LastData + "\",\"" + c.Start + "\",\"" + c.Answer + "\",\"" + c.End + "\"," + c.Duration + "," + c.Billsec + ",\"" + string(c.Disposition) + "\",\"" + string(c.AmaFlag) + "\",\"" + c.Userfield + "\",\"" + c.UniqueId + "\""
+		"\",\"" + c.Src + "\",\"" + c.Dst + "\",\"" + c.Dcontext + "\",\"" + escapedCallerId + "\",\"" + c.Channel + "\",\"" + c.DstChannel + "\",\"" + c.LastApp + "\",\"" + c.LastData + "\",\"" + c.Start + "\",\"" + c.Answer + "\",\"" + c.End + "\"," + c.Duration + "," + c.Billsec + ",\"" + string(c.Disposition) + "\",\"" + string(c.AmaFlag) + "\",\"" + c.UniqueId + "\",\"" + c.Userfield + "\""
 }
 
 type File struct {
@@ -81,8 +81,8 @@ func ReadWithoutHeader(reader io.Reader) (File, error) {
 		record.Billsec = line[13]
 		record.Disposition = CallState(line[14])
 		record.AmaFlag = AmaFlag(line[15])
-		record.Userfield = line[16]
-		record.UniqueId = line[17]
+		record.UniqueId = line[16]
+		record.Userfield = line[17]
 		result = append(result, &record)
 	}
 	return File{Records: result}, nil
