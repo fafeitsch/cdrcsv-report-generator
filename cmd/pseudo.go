@@ -27,7 +27,7 @@ func main() {
 		fmt.Printf("Error: Could not open the pseudo contacts file %s: %v", *contactsPath, err)
 		os.Exit(1)
 	}
-	contacts, err := cdrcsv.ParsePseudoContacts(contactsFile, false)
+	contacts, err := cdrcsv.ParsePseudoContacts(contactsFile)
 	_ = contactsFile.Close()
 	if err != nil {
 		fmt.Printf("Error: The contacts file %s could not be parsed: %v", *contactsPath, err)
@@ -44,16 +44,9 @@ func main() {
 	fmt.Printf("Reading the cdr files …\n")
 	cdrFiles := make([]cdrcsv.File, 0, len(flag.Args()))
 	for _, arg := range flag.Args() {
-		reader, err := os.Open(arg)
+		file, err := cdrcsv.ReadWithoutHeaderFromFile(arg)
 		if err != nil {
-			fmt.Printf("could not open file %s: %v", arg, err)
-			os.Exit(1)
-		}
-		file, err := cdrcsv.ReadWithoutHeader(reader)
-		_ = reader.Close()
-		if err != nil {
-			fmt.Printf("could not parse file %s: %v", arg, err)
-			_ = reader.Close()
+			fmt.Printf("%v", err)
 			os.Exit(1)
 		}
 		cdrFiles = append(cdrFiles, file)

@@ -40,7 +40,7 @@ func TestReadWrite(t *testing.T) {
 			t.Errorf("error while comparing files: %v %v", err1, err2)
 		}
 		if expectedLine != actualLine {
-			t.Errorf("expected vs. actual line:\n%s\n%s", expectedLine, actualLine)
+			t.Errorf("expected vs. actual line:\n%s%s", expectedLine, actualLine)
 		}
 	}
 }

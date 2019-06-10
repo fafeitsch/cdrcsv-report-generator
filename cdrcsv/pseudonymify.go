@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const (
+	hiddenString = "NOT_AVAILABLE"
+)
+
 type TimeShifter interface {
 	shiftTime(time.Time) time.Time
 }
@@ -76,46 +80,45 @@ func Pseudonymify(cdrs *[]File, pseudo PseudoData, settings Settings) error {
 			record.Dcontext = contextMapping[record.Dcontext]
 
 			if settings.HideAppData {
-				record.LastData = "NOT_AVAILABLE"
+				record.LastData = hiddenString
 			}
 			if settings.HideChannels {
-				record.Channel = "NOT_AVAILABLE"
-				record.DstChannel = "NOT_AVAILABLE"
+				record.Channel = hiddenString
+				record.DstChannel = hiddenString
 			}
 
-			start := record.Start
-			if start != "" {
-				startTime, err := time.Parse(DateFormat, start)
-				if err != nil {
-					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
-				}
-				newTime := settings.TimeShifter.shiftTime(startTime)
-				record.Start = newTime.Format(DateFormat)
-				epoch := strconv.Itoa(int(newTime.Unix()))
-				callId := strings.Split(record.UniqueId, ".")[1]
-				record.UniqueId = epoch + "." + callId
+			shiftedStart, err := shiftDate(record.Start, settings.TimeShifter)
+			if err != nil {
+				return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 			}
+			record.Start = shiftedStart
+			shiftedParsedDate, _ := time.Parse(DateFormat, shiftedStart)
+			epoch := strconv.Itoa(int(shiftedParsedDate.Unix()))
+			callId := strings.Split(record.UniqueId, ".")[1]
+			record.UniqueId = epoch + "." + callId
 
-			answered := record.Answer
-			if answered != "" {
-				answeredTime, err := time.Parse(DateFormat, answered)
-				if err != nil {
-					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
-				}
-				record.Answer = settings.TimeShifter.shiftTime(answeredTime).Format(DateFormat)
+			shiftedAnswered, err := shiftDate(record.Answer, settings.TimeShifter)
+			if err != nil {
+				return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 			}
+			record.Answer = shiftedAnswered
 
-			end := record.End
-			if end != "" {
-				endTime, err := time.Parse(DateFormat, end)
-				if err != nil {
-					return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
-				}
-				record.End = settings.TimeShifter.shiftTime(endTime).Format(DateFormat)
+			shiftedEnd, err := shiftDate(record.End, settings.TimeShifter)
+			if err != nil {
+				return fmt.Errorf("file %d, line %d: %v", fileIndex+1, recordIndex+1, err)
 			}
+			record.End = shiftedEnd
 		}
 	}
 	return nil
+}
+
+func shiftDate(date string, shifter TimeShifter) (string, error) {
+	if date == "" {
+		return "", nil
+	}
+	parsedDate, err := time.Parse(DateFormat, date)
+	return shifter.shiftTime(parsedDate).Format(DateFormat), err
 }
 
 func callerIdToParticipant(callerId string) Participant {
@@ -186,28 +189,22 @@ func findContexts(cdrs []File) []string {
 	set := make(map[string]bool)
 	for _, file := range cdrs {
 		for _, record := range file.Records {
+			if _, ok := set[record.Dcontext]; !ok {
+				result = append(result, record.Dcontext)
+			}
 			set[record.Dcontext] = true
 		}
 	}
-	for key, value := range set {
-		if value {
-			result = append(result, key)
-		}
-	}
-	sort.Strings(result)
 	return result
 }
 
-func ParsePseudoContacts(reader io.Reader, hasHeader bool) ([]Participant, error) {
+func ParsePseudoContacts(reader io.Reader) ([]Participant, error) {
 	csvReader := csv.NewReader(reader)
 	lines, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("error reading from csv file: %v", err)
 	}
 	start := 0
-	if hasHeader {
-		start = 1
-	}
 	result := make([]Participant, 0, len(lines))
 	for _, line := range lines[start:] {
 		contact := Participant{

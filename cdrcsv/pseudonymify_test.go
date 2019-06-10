@@ -2,35 +2,137 @@ package cdrcsv
 
 import (
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
 
 func TestPseudonymify(t *testing.T) {
+	file, oldFile, pseudoParticipants, err := collectData(t)
+	pseudoContexts := []string{"c1", "c2", "c3", "c4", "c5"}
+	data := PseudoData{Participants: pseudoParticipants, Contexts: pseudoContexts}
+	shifter := NaturalTimeShifter{Days: 5, Years: -2, Minutes: 14, Hours: -2}
+	//TODO add also tests that check the functionality of the settings HideChannels and HideAppData
+	settings := Settings{HideChannels: true, HideAppData: true, TimeShifter: &shifter}
+	err = Pseudonymify(&[]File{file}, data, settings)
+	if err != nil {
+		t.Errorf("could not pseudonymify the dataset: %v", err)
+		return
+	}
+	if len(file.Records) != len(oldFile.Records) {
+		t.Errorf("The pseudonymified file should have %d records, but had %d records.", len(oldFile.Records), len(file.Records))
+		return
+	}
+	checkContexts([]File{file}, []File{oldFile}, pseudoContexts, t)
+	checkPhoneNumbersChanged([]File{file}, []File{oldFile}, t)
+	checkAppDataHidden([]File{file}, t)
+	checkChannelDataHidden([]File{file}, t)
+	checkDatesChanged([]File{file}, []File{oldFile}, &shifter, t)
+}
+
+func collectData(t *testing.T) (File, File, []Participant, error) {
 	file, err := ReadWithoutHeaderFromFile("../mockdata/cdr.csv")
 	if err != nil {
-		t.Errorf("could not parse test cdr: %v", err)
-		return
+		t.Errorf("%v", err)
+	}
+	oldFile, err := ReadWithoutHeaderFromFile("../mockdata/cdr.csv")
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 	personsFile, err := os.Open("../mockdata/persons.csv")
 	if err != nil {
 		t.Errorf("could not open the persons file: %v", err)
-		return
 	}
 	defer func() {
 		_ = personsFile.Close()
 	}()
-	pseudoParticipants, err := ParsePseudoContacts(personsFile, false)
+	pseudoParticipants, err := ParsePseudoContacts(personsFile)
 	if err != nil {
 		t.Errorf("%v", err)
-		return
 	}
-	pseudoContexts := []string{"c1", "c2", "c3", "c4", "c5"}
-	data := PseudoData{Participants: pseudoParticipants, Contexts: pseudoContexts}
-	settings := Settings{HideChannels: true, HideAppData: true}
-	err = Pseudonymify(&[]File{file}, data, settings)
-	if err != nil {
-		t.Errorf("could not pseudonymify the dataset: %v", err)
+	return file, oldFile, pseudoParticipants, err
+}
+
+func checkContexts(files []File, old []File, expected []string, t *testing.T) {
+	assignment := make(map[string]string)
+	actual := findContexts(old)
+	for index, context := range actual {
+		assignment[context] = expected[index]
+	}
+	for fileIndex, file := range files {
+		for recordIndex, record := range file.Records {
+			oldRecord := old[fileIndex].Records[recordIndex]
+			if record.Dcontext != assignment[oldRecord.Dcontext] {
+				t.Errorf("In record file %d, record %d, the context %s should have been replaced by %s but was instead %s", fileIndex, recordIndex, oldRecord.Dcontext, assignment[oldRecord.Dcontext], record.Dcontext)
+			}
+		}
+	}
+}
+
+func checkPhoneNumbersChanged(files []File, old []File, t *testing.T) {
+	for fileIndex, file := range files {
+		for recordIndex, record := range file.Records {
+			oldRecord := old[fileIndex].Records[recordIndex]
+			if record.CallerId == oldRecord.CallerId {
+				t.Errorf("In record file %d, record %d the caller id %s shoud be changed, but was not.", fileIndex, recordIndex, record.CallerId)
+			}
+			if record.Dst == oldRecord.Dst {
+				t.Errorf("In record file %d, record %d the destination %s should be changed, but was not.", fileIndex, recordIndex, record.Dst)
+			}
+			if record.Src == oldRecord.Src {
+				t.Errorf("In record file %d, record %d the source %s should be changed, but was not.", fileIndex, recordIndex, record.Src)
+			}
+		}
+	}
+}
+
+func checkAppDataHidden(files []File, t *testing.T) {
+	for index, file := range files {
+		for recordIndex, record := range file.Records {
+			if record.LastData != hiddenString {
+				t.Errorf("In file %d, record %d the last data field was not hidden.", index, recordIndex)
+			}
+		}
+	}
+}
+
+func checkChannelDataHidden(files []File, t *testing.T) {
+	for index, file := range files {
+		for recordIndex, record := range file.Records {
+			if record.DstChannel != hiddenString {
+				t.Errorf("In file %d, record %d the destination channel field was not hidden.", index, recordIndex)
+			}
+			if record.Channel != hiddenString {
+				t.Errorf("In file %d, record %d the source channel field was not hidden.", index, recordIndex)
+			}
+		}
+	}
+}
+
+func checkDatesChanged(files []File, oldFiles []File, shifter TimeShifter, t *testing.T) {
+	for index, file := range files {
+		for recordIndex, record := range file.Records {
+			oldRecord := oldFiles[index].Records[recordIndex]
+			oldStart, _ := time.Parse(DateFormat, oldRecord.Start)
+			if record.Start != shifter.shiftTime(oldStart).Format(DateFormat) {
+				t.Errorf("In file %d, record %d the start datetime shoud be %s, but was %s", index, recordIndex, shifter.shiftTime(oldStart).Format(DateFormat), record.Start)
+			}
+			newStart, _ := time.Parse(DateFormat, record.Start)
+			newStartUnix := strconv.Itoa(int(newStart.Unix()))
+			actualStartUnix := strings.Split(record.UniqueId, ".")[0]
+			if newStartUnix != actualStartUnix {
+				t.Errorf("In file %d, record %d the unique id beginning should be %s, but was %s", index, recordIndex, newStartUnix, actualStartUnix)
+			}
+			oldAnswered, _ := time.Parse(DateFormat, oldRecord.Answer)
+			if record.Answer != "" && record.Answer != shifter.shiftTime(oldAnswered).Format(DateFormat) {
+				t.Errorf("In file %d, record %d the answered datetime shoud be %s, but was %s", index, recordIndex, shifter.shiftTime(oldAnswered).Format(DateFormat), record.Answer)
+			}
+			oldEnd, _ := time.Parse(DateFormat, oldRecord.End)
+			if record.End != shifter.shiftTime(oldEnd).Format(DateFormat) {
+				t.Errorf("In file %d, record %d the end datetime shoud be %s, but was %s", index, recordIndex, shifter.shiftTime(oldEnd).Format(DateFormat), record.End)
+			}
+		}
 	}
 }
 
@@ -48,7 +150,7 @@ func TestPseudonymifyTooFewContexts(t *testing.T) {
 	defer func() {
 		_ = personsFile.Close()
 	}()
-	pseudoParticipants, err := ParsePseudoContacts(personsFile, false)
+	pseudoParticipants, err := ParsePseudoContacts(personsFile)
 	if err != nil {
 		t.Errorf("%v", err)
 		return
@@ -199,7 +301,7 @@ func TestFindContexts(t *testing.T) {
 		return
 	}
 	contexts := findContexts([]File{file})
-	expectedContexts := []string{"door", "hq", "production", "support"}
+	expectedContexts := []string{"hq", "production", "door", "support"}
 	if len(contexts) != len(expectedContexts) {
 		t.Errorf("Expected contexts were %d, but actual contexts were %d.", len(expectedContexts), len(contexts))
 		return

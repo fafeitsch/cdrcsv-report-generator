@@ -70,6 +70,8 @@ func ReadWithoutHeaderFromFile(filename string) (File, error) {
 //ReadWithoutHeader reads a CDR csv-file from the specified reader and returns the record file.
 func ReadWithoutHeader(reader io.Reader) (File, error) {
 	csvReader := csv.NewReader(reader)
+	csvReader.TrimLeadingSpace = true
+	csvReader.FieldsPerRecord = 18
 	lines, err := csvReader.ReadAll()
 	if err != nil {
 		return File{}, fmt.Errorf("could not read csv records: %v", err)
