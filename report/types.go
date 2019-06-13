@@ -36,12 +36,13 @@ type Matcher interface {
 }
 
 type RegexMatcher struct {
-	regexp.Regexp
+	regex    regexp.Regexp
 	provider func(cdrcsv.Record) string
 }
 
 func (r *RegexMatcher) MatchRecord(record cdrcsv.Record) bool {
-	return r.MatchString(r.provider(record))
+	text := r.provider(record)
+	return r.regex.MatchString(text)
 }
 
 type AndMatcher struct {
@@ -60,10 +61,6 @@ type OrMatcher struct {
 
 func (a *OrMatcher) MatchRecord(record cdrcsv.Record) bool {
 	return a.left.MatchRecord(record) || a.right.MatchRecord(record)
-}
-
-func (c column) get() column {
-	return c
 }
 
 type CountingsDefinition struct {

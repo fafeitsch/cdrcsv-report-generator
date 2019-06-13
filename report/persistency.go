@@ -7,6 +7,7 @@ import (
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"io"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -88,7 +89,11 @@ func convertFormula(formula jsonFormula) (Matcher, error) {
 			val := reflect.ValueOf(record)
 			return val.FieldByName(formula.Column).String()
 		}
-		return &RegexMatcher{provider: provider}, nil
+		expression, err := regexp.Compile(formula.Regex)
+		if err != nil {
+			return nil, fmt.Errorf("%s is not a valid regex: %v", formula.Regex, err)
+		}
+		return &RegexMatcher{regex: *expression, provider: provider}, nil
 	}
 	return nil, fmt.Errorf("either left, right and operator fields must be set or regex and column fields must be set.")
 }
