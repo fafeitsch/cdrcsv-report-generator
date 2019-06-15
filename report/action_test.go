@@ -25,7 +25,7 @@ func TestApplyCountings(t *testing.T) {
 	expectedMap := make(map[string]int)
 	expectedMap["production_calls"] = 17
 	expectedMap["employees"] = 4
-	expectedMap["after_business"] = 0
+	expectedMap["evening_hours"] = 3
 	actualMap := applyCountings(def.Countings, file.Records)
 	if len(expectedMap) != len(actualMap) {
 		t.Errorf("Expected fields were %d, but actual fields were %d.", len(expectedMap), len(actualMap))

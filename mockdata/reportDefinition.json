@@ -6,12 +6,11 @@
       "formula": {
         "column": "Dcontext",
         "regex": "production"
-      },
-      "exclude_other_matches": false
+      }
     },
     {
-      "name": "after_business",
-      "display_name": "Calls from the headquarter after business hours",
+      "name": "evening_hours",
+      "display_name": "Calls from the headquarter in the evening hours",
       "formula": {
         "operator": "and",
         "left": {
@@ -20,10 +19,9 @@
         },
         "right": {
           "column": "Start",
-          "regex": "[0-9]{4}-[0-9]{2}-[0-9]{2} (18|19|20|21|22|23|24):[0-9]{2}:[0-9]{2}"
+          "regex": "[0-9]{4}-[0-9]{2}-[0-9]{2} (17|18|19):[0-9]{2}:[0-9]{2}"
         }
-      },
-      "exclude_other_matches": true
+      }
     },
     {
       "name": "employees",
@@ -38,8 +36,7 @@
           "column": "CallerId",
           "regex": ".*Farlie Brager.*"
         }
-      },
-      "exclude_other_matches": false
+      }
     }
   ]
 }

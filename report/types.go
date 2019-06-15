@@ -5,32 +5,6 @@ import (
 	"regexp"
 )
 
-type CdrColumn interface {
-	get() column
-}
-type column string
-
-const (
-	AccountCode column = "AccountCode"
-	Src         column = "Src"
-	Dst         column = "Dst"
-	Dcontext    column = "Dcontext"
-	CallerId    column = "CallerId"
-	Channel     column = "Channel"
-	DstChannel  column = "DstChannel"
-	LastApp     column = "LastApp"
-	LastData    column = "LastData"
-	Start       column = "Start"
-	Answer      column = "Answer"
-	End         column = "End"
-	Duration    column = "Duration"
-	Billsec     column = "Billsec"
-	Disposition column = "Disposition"
-	AmaFlag     column = "AmaFlag"
-	Userfield   column = "Userfield"
-	UniqueId    column = "UniqueId"
-)
-
 type Matcher interface {
 	MatchRecord(*cdrcsv.Record) bool
 }
@@ -64,10 +38,9 @@ func (a *OrMatcher) MatchRecord(record *cdrcsv.Record) bool {
 }
 
 type CountingsDefinition struct {
-	Name                string
-	DisplayName         string
-	Formula             Matcher
-	ExcludeOtherMatches bool
+	Name        string
+	DisplayName string
+	Formula     Matcher
 }
 
 type ReportDefinition struct {

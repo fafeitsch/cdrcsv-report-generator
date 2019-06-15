@@ -21,18 +21,14 @@ func TestParseDefinition(t *testing.T) {
 	if len(reportDefinition.Countings) != 3 {
 		t.Errorf("Expected number of parsed countings should be 2 but was %d.", len(reportDefinition.Countings))
 	}
-	expectedNames := []string{"production_calls", "after_business", "employees"}
-	expectedDisplayNames := []string{"Calls from the Production Department", "Calls from the headquarter after business hours", "Added calls from Magdalene Greenman and Farlie Brager"}
-	expectedExclude := []bool{false, true, false}
+	expectedNames := []string{"production_calls", "evening_hours", "employees"}
+	expectedDisplayNames := []string{"Calls from the Production Department", "Calls from the headquarter in the evening hours", "Added calls from Magdalene Greenman and Farlie Brager"}
 	for index, counting := range reportDefinition.Countings {
 		if expectedNames[index] != counting.Name {
 			t.Errorf("Expected name of the %dth counting is '%s' but was '%s.'", index, expectedNames[index], counting.Name)
 		}
 		if expectedDisplayNames[index] != counting.DisplayName {
 			t.Errorf("Expected display name of the %dth counting is '%s' but was '%s'.", index, expectedDisplayNames[index], counting.DisplayName)
-		}
-		if expectedExclude[index] != counting.ExcludeOtherMatches {
-			t.Errorf("Expected 'exclude_other_matchings' of %dth counting is %t but was %t.", index, expectedExclude[index], counting.ExcludeOtherMatches)
 		}
 	}
 }
@@ -50,8 +46,8 @@ func TestParseMatcher(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 	var records = []cdrcsv.Record{cdrcsv.Record{Dcontext: "production"},
-		{Dcontext: "hq", Start: "2017-06-12 20:23:05"},
-		{Dcontext: "production", Start: "2017-06-12 20:23:05"},
+		{Dcontext: "hq", Start: "2017-06-12 17:23:05"},
+		{Dcontext: "production", Start: "2017-06-12 17:23:05"},
 		{Dcontext: "hq", Start: "2017-06-12 06:17:22"}}
 
 	expectedMatcher1 := []bool{true, false, true, false}

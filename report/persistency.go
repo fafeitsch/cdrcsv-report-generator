@@ -20,10 +20,9 @@ type jsonFormula struct {
 }
 
 type jsonCounting struct {
-	Name               string      `json:"name"`
-	DisplayName        string      `json:"display_name"`
-	Formula            jsonFormula `json:"formula"`
-	ExludeOtherMatches bool        `json:"exclude_other_matches"`
+	Name        string      `json:"name"`
+	DisplayName string      `json:"display_name"`
+	Formula     jsonFormula `json:"formula"`
 }
 
 type jsonReport struct {
@@ -51,7 +50,7 @@ func convertJson(report jsonReport) (ReportDefinition, error) {
 		if err != nil {
 			return ReportDefinition{}, fmt.Errorf("parsing the formula of the %dth counting failed: %v", index, err)
 		}
-		counting := CountingsDefinition{Name: jsonCounting.Name, DisplayName: jsonCounting.DisplayName, ExcludeOtherMatches: jsonCounting.ExludeOtherMatches, Formula: matcher}
+		counting := CountingsDefinition{Name: jsonCounting.Name, DisplayName: jsonCounting.DisplayName, Formula: matcher}
 		countings = append(countings, counting)
 	}
 	return ReportDefinition{Countings: countings}, nil
