@@ -85,8 +85,8 @@ func convertFormula(formula jsonFormula) (Matcher, error) {
 			}
 			return nil, fmt.Errorf("Column '%s' not found. Column must be one of: %s", formula.Column, strings.Join(fields, ", "))
 		}
-		provider := func(record cdrcsv.Record) string {
-			val := reflect.ValueOf(record)
+		provider := func(record *cdrcsv.Record) string {
+			val := reflect.ValueOf(*record)
 			return val.FieldByName(formula.Column).String()
 		}
 		expression, err := regexp.Compile(formula.Regex)

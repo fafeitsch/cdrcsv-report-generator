@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseDefinition(t *testing.T) {
-	jsonFile, err := os.Open("../mockdata/report.json")
+	jsonFile, err := os.Open("../mockdata/reportDefinition.json")
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -18,12 +18,12 @@ func TestParseDefinition(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if len(reportDefinition.Countings) != 2 {
+	if len(reportDefinition.Countings) != 3 {
 		t.Errorf("Expected number of parsed countings should be 2 but was %d.", len(reportDefinition.Countings))
 	}
-	expectedNames := []string{"production_calls", "after_business"}
-	expectedDisplayNames := []string{"Calls from the Production Department", "Calls from the headquarter after business hours"}
-	expectedExclude := []bool{false, true}
+	expectedNames := []string{"production_calls", "after_business", "employees"}
+	expectedDisplayNames := []string{"Calls from the Production Department", "Calls from the headquarter after business hours", "Added calls from Magdalene Greenman and Farlie Brager"}
+	expectedExclude := []bool{false, true, false}
 	for index, counting := range reportDefinition.Countings {
 		if expectedNames[index] != counting.Name {
 			t.Errorf("Expected name of the %dth counting is '%s' but was '%s.'", index, expectedNames[index], counting.Name)
@@ -38,7 +38,7 @@ func TestParseDefinition(t *testing.T) {
 }
 
 func TestParseMatcher(t *testing.T) {
-	jsonFile, err := os.Open("../mockdata/report.json")
+	jsonFile, err := os.Open("../mockdata/reportDefinition.json")
 	if err != nil {
 		t.Errorf("%v", err)
 	}
@@ -59,10 +59,10 @@ func TestParseMatcher(t *testing.T) {
 	prodMatcher := reportDefinition.Countings[0].Formula
 	hourMatcher := reportDefinition.Countings[1].Formula
 	for index, record := range records {
-		if prodMatcher.MatchRecord(record) != expectedMatcher1[index] {
+		if prodMatcher.MatchRecord(&record) != expectedMatcher1[index] {
 			t.Errorf("On record %d, the production matcher reported match = %t, but expected was %t.", index, !expectedMatcher1[index], expectedMatcher1[index])
 		}
-		if hourMatcher.MatchRecord(record) != expectedMatcher2[index] {
+		if hourMatcher.MatchRecord(&record) != expectedMatcher2[index] {
 			t.Errorf("On record %d, the hour matcher reported match = %t, but expected was %t.", index, !expectedMatcher2[index], expectedMatcher2[index])
 		}
 	}

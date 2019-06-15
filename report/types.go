@@ -32,15 +32,15 @@ const (
 )
 
 type Matcher interface {
-	MatchRecord(cdrcsv.Record) bool
+	MatchRecord(*cdrcsv.Record) bool
 }
 
 type RegexMatcher struct {
 	regex    regexp.Regexp
-	provider func(cdrcsv.Record) string
+	provider func(*cdrcsv.Record) string
 }
 
-func (r *RegexMatcher) MatchRecord(record cdrcsv.Record) bool {
+func (r *RegexMatcher) MatchRecord(record *cdrcsv.Record) bool {
 	text := r.provider(record)
 	return r.regex.MatchString(text)
 }
@@ -50,7 +50,7 @@ type AndMatcher struct {
 	right Matcher
 }
 
-func (a *AndMatcher) MatchRecord(record cdrcsv.Record) bool {
+func (a *AndMatcher) MatchRecord(record *cdrcsv.Record) bool {
 	return a.left.MatchRecord(record) && a.right.MatchRecord(record)
 }
 
@@ -59,7 +59,7 @@ type OrMatcher struct {
 	right Matcher
 }
 
-func (a *OrMatcher) MatchRecord(record cdrcsv.Record) bool {
+func (a *OrMatcher) MatchRecord(record *cdrcsv.Record) bool {
 	return a.left.MatchRecord(record) || a.right.MatchRecord(record)
 }
 

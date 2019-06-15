@@ -24,6 +24,22 @@
         }
       },
       "exclude_other_matches": true
+    },
+    {
+      "name": "employees",
+      "display_name": "Added calls from Magdalene Greenman and Farlie Brager",
+      "formula": {
+        "operator": "or",
+        "left": {
+          "column": "CallerId",
+          "regex": ".*Magdalene Greenman.*"
+        },
+        "right": {
+          "column": "CallerId",
+          "regex": ".*Farlie Brager.*"
+        }
+      },
+      "exclude_other_matches": false
     }
   ]
 }
