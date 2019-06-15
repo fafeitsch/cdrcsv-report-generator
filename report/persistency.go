@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"io"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -27,6 +28,17 @@ type jsonCounting struct {
 
 type jsonReport struct {
 	Countings []jsonCounting `json:"countings"`
+}
+
+func ParseDefinitionFromFile(filename string) (ReportDefinition, error) {
+	jsonFile, err := os.Open("../mockdata/reportDefinition.json")
+	if err != nil {
+		return ReportDefinition{}, err
+	}
+	defer func() {
+		_ = jsonFile.Close()
+	}()
+	return ParseDefinition(jsonFile)
 }
 
 func ParseDefinition(reader io.Reader) (ReportDefinition, error) {

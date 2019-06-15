@@ -46,3 +46,7 @@ type CountingsDefinition struct {
 type ReportDefinition struct {
 	Countings []CountingsDefinition
 }
+
+type Report struct {
+	stats map[string]int
+}

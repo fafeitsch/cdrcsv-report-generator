@@ -7,14 +7,7 @@ import (
 )
 
 func TestParseDefinition(t *testing.T) {
-	jsonFile, err := os.Open("../mockdata/reportDefinition.json")
-	if err != nil {
-		t.Errorf("%v", err)
-	}
-	defer func() {
-		_ = jsonFile.Close()
-	}()
-	reportDefinition, err := ParseDefinition(jsonFile)
+	reportDefinition, err := ParseDefinitionFromFile("../mockdata/reportDefinition.json")
 	if err != nil {
 		t.Errorf("%v", err)
 	}

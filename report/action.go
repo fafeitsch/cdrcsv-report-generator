@@ -17,3 +17,7 @@ func applyCountings(countings []CountingsDefinition, records []*cdrcsv.Record) m
 	}
 	return result
 }
+
+func GenerateReport(definition ReportDefinition, records []*cdrcsv.Record) Report {
+	return Report{stats: applyCountings(definition.Countings, records)}
+}

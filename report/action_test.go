@@ -2,20 +2,11 @@ package report
 
 import (
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
-	"os"
 	"testing"
 )
 
 func TestApplyCountings(t *testing.T) {
-	jsonFile, err := os.Open("../mockdata/reportDefinition.json")
-	if err != nil {
-		t.Errorf("%v", err)
-		return
-	}
-	defer func() {
-		_ = jsonFile.Close()
-	}()
-	def, err := ParseDefinition(jsonFile)
+	def, err := ParseDefinitionFromFile("../mockdata/reportDefinition.json")
 	file, err := cdrcsv.ReadWithoutHeaderFromFile("../mockdata/smallcdr.csv")
 	if err != nil {
 		t.Errorf("%v", err)

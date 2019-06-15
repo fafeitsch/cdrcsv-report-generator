@@ -1,0 +1,7 @@
+This is a sample call detail report:
+
+{{- /*gotype: github.com/fafeitsch/open-callopticum/report.Report*/ -}}
+
+Production Calls: {{.stats index "production_calls"}}
+Calls in the evening hours: {{.stats index "evening_hours"}}
+Calls from Magdalene Greenman and Farlie Brager: {{.stats index "employees"}}
