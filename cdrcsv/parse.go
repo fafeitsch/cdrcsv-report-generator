@@ -4,8 +4,12 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -25,8 +29,8 @@ type Record struct {
 	Start       string
 	Answer      string
 	End         string
-	Duration    string
-	Billsec     string
+	Duration    time.Duration
+	Billsec     time.Duration
 	Disposition CallState
 	AmaFlag     AmaFlag
 	Userfield   string
@@ -36,8 +40,10 @@ type Record struct {
 func (c *Record) ToCsvString() string {
 	//TODO: escape all fields, not only the caller id
 	escapedCallerId := strings.ReplaceAll(c.CallerId, "\"", "\"\"")
+	duration := strconv.Itoa(int(c.Duration.Seconds()))
+	billsec := strconv.Itoa(int(c.Billsec.Seconds()))
 	return "\"" + c.Accountcode +
-		"\",\"" + c.Src + "\",\"" + c.Dst + "\",\"" + c.Dcontext + "\",\"" + escapedCallerId + "\",\"" + c.Channel + "\",\"" + c.DstChannel + "\",\"" + c.LastApp + "\",\"" + c.LastData + "\",\"" + c.Start + "\",\"" + c.Answer + "\",\"" + c.End + "\"," + c.Duration + "," + c.Billsec + ",\"" + string(c.Disposition) + "\",\"" + string(c.AmaFlag) + "\",\"" + c.UniqueId + "\",\"" + c.Userfield + "\""
+		"\",\"" + c.Src + "\",\"" + c.Dst + "\",\"" + c.Dcontext + "\",\"" + escapedCallerId + "\",\"" + c.Channel + "\",\"" + c.DstChannel + "\",\"" + c.LastApp + "\",\"" + c.LastData + "\",\"" + c.Start + "\",\"" + c.Answer + "\",\"" + c.End + "\"," + duration + "," + billsec + ",\"" + string(c.Disposition) + "\",\"" + string(c.AmaFlag) + "\",\"" + c.UniqueId + "\",\"" + c.Userfield + "\""
 }
 
 type File struct {
@@ -54,6 +60,46 @@ func (f *File) WriteAsCsvWithoutHeader(writer io.Writer) error {
 		}
 	}
 	return nil
+}
+
+func (f *File) ComputeAverageCallingTime() time.Duration {
+	sum := 0.0
+	counter := 0.0
+	for _, record := range f.Records {
+		if record.Billsec == 0 {
+			continue
+		}
+		sum = sum + record.Billsec.Seconds()
+		counter = counter + 1
+	}
+	result := time.Duration(sum*1000/counter) * time.Millisecond
+	return result.Round(time.Second)
+}
+
+func (f *File) ComputeMedianCallingTime() time.Duration {
+	callTimes := make([]float64, 0, len(f.Records))
+	for _, record := range f.Records {
+		if record.Billsec == 0 {
+			continue
+		}
+		callTimes = append(callTimes, record.Billsec.Seconds())
+	}
+	sort.Float64s(callTimes)
+	half := int(math.Ceil(0.5*float64(len(callTimes))) - 1)
+	return time.Duration(callTimes[half]) * time.Second
+}
+
+func (f *File) GetLongestCall() *Record {
+	if len(f.Records) == 0 {
+		return nil
+	}
+	call := f.Records[0]
+	for _, record := range f.Records {
+		if record.Billsec > call.Billsec {
+			call = record
+		}
+	}
+	return call
 }
 
 func ReadWithoutHeaderFromFile(filename string) (File, error) {
@@ -77,7 +123,15 @@ func ReadWithoutHeader(reader io.Reader) (File, error) {
 		return File{}, fmt.Errorf("could not read csv records: %v", err)
 	}
 	result := make([]*Record, 0, len(lines))
-	for _, line := range lines {
+	for index, line := range lines {
+		duration, err := strconv.Atoi(line[12])
+		if err != nil {
+			return File{}, fmt.Errorf("duration of record in line %d could not be parsed: %v", index+1, err)
+		}
+		billsec, err := strconv.Atoi(line[13])
+		if err != nil {
+			return File{}, fmt.Errorf("billset of record in line %d could not be parsed: %v", index+1, err)
+		}
 		record := Record{}
 		record.Accountcode = line[0]
 		record.Src = line[1]
@@ -91,8 +145,8 @@ func ReadWithoutHeader(reader io.Reader) (File, error) {
 		record.Start = line[9]
 		record.Answer = line[10]
 		record.End = line[11]
-		record.Duration = line[12]
-		record.Billsec = line[13]
+		record.Duration = time.Duration(duration) * time.Second
+		record.Billsec = time.Duration(billsec) * time.Second
 		record.Disposition = CallState(line[14])
 		record.AmaFlag = AmaFlag(line[15])
 		record.UniqueId = line[16]

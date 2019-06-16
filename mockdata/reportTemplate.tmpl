@@ -4,3 +4,10 @@ This is a sample call detail report:
 Production Calls: {{index .Stats "production_calls"}}
 Calls in the evening hours: {{index .Stats "evening_hours"}}
 Calls from Magdalene Greenman and Farlie Brager: {{index .Stats "employees"}}
+
+The average calling time was approximately {{printf "%.0f" .AverageCallingTime.Minutes}} minutes.
+The median calling time was approximately {{printf "%.0f" .MedianCallingTime.Minutes}} minutes.
+
+The longest call lasted approximately {{printf "%.0f" .LongestCall.Billsec.Minutes}} minutes and happened between {{.LongestCall.CallerId}} and {{.LongestCall.Dst}}.
+
+There were {{.NumberOfCalls}} calls in total.

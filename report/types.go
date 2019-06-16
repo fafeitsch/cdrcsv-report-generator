@@ -3,6 +3,7 @@ package report
 import (
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"regexp"
+	"time"
 )
 
 type Matcher interface {
@@ -48,5 +49,9 @@ type ReportDefinition struct {
 }
 
 type Report struct {
-	Stats map[string]int
+	Stats              map[string]int
+	AverageCallingTime time.Duration
+	MedianCallingTime  time.Duration
+	NumberOfCalls      int
+	LongestCall        cdrcsv.Record
 }
