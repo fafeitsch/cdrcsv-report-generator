@@ -49,10 +49,10 @@ func TestParseMatcher(t *testing.T) {
 	hourMatcher := reportDefinition.Countings[1].Formula
 	for index, record := range records {
 		if prodMatcher.MatchRecord(&record) != expectedMatcher1[index] {
-			t.Errorf("On record %d, the production matcher reported match = %t, but expected was %t.", index, !expectedMatcher1[index], expectedMatcher1[index])
+			t.Errorf("On Record %d, the production matcher reported match = %t, but expected was %t.", index, !expectedMatcher1[index], expectedMatcher1[index])
 		}
 		if hourMatcher.MatchRecord(&record) != expectedMatcher2[index] {
-			t.Errorf("On record %d, the hour matcher reported match = %t, but expected was %t.", index, !expectedMatcher2[index], expectedMatcher2[index])
+			t.Errorf("On Record %d, the hour matcher reported match = %t, but expected was %t.", index, !expectedMatcher2[index], expectedMatcher2[index])
 		}
 	}
 }

@@ -48,7 +48,14 @@ func TestGenerateReport(t *testing.T) {
 
 Production Calls: 17
 Calls in the evening hours: 3
-Calls from Magdalene Greenman and Farlie Brager: 4`
+Calls from Magdalene Greenman and Farlie Brager: 4
+
+The average calling time was approximately 5 minutes.
+The median calling time was approximately 2 minutes.
+
+The longest call lasted approximately 19 minutes and happened between &#34;&#34; &lt;334-442-8436&gt; and 397-815-2211.
+
+There were 45 calls in total.`
 	if actual != expected {
 		t.Errorf("Expected text:\n%s\n\nActual text:\n%s", expected, actual)
 	}

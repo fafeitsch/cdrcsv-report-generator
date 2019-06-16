@@ -41,10 +41,10 @@ func GenerateReport(settings Settings) error {
 	if err != nil {
 		return fmt.Errorf("could not parse the template file %s: %v", settings.TemplateFile, err)
 	}
-	generatedReport := Report{Stats: applyCountings(reportDefinition.Countings, file.Records),
-		LongestCall:        *file.GetLongestCall(),
-		AverageCallingTime: file.ComputeAverageCallingTime(),
-		MedianCallingTime:  file.ComputeMedianCallingTime(),
-		NumberOfCalls:      len(file.Records)}
+	statsFile, err := newStatsFile(file)
+	if err != nil {
+		return fmt.Errorf("could not create statistics: %v", err)
+	}
+	generatedReport := Report{Stats: applyCountings(reportDefinition.Countings, file.Records), Records: statsFile}
 	return templateDefinition.Execute(settings.Writer, generatedReport)
 }

@@ -5,9 +5,9 @@ Production Calls: {{index .Stats "production_calls"}}
 Calls in the evening hours: {{index .Stats "evening_hours"}}
 Calls from Magdalene Greenman and Farlie Brager: {{index .Stats "employees"}}
 
-The average calling time was approximately {{printf "%.0f" .AverageCallingTime.Minutes}} minutes.
-The median calling time was approximately {{printf "%.0f" .MedianCallingTime.Minutes}} minutes.
+The average calling time was approximately {{printf "%.0f" .Records.ComputeAverageCallingTime.Minutes}} minutes.
+The median calling time was approximately {{printf "%.0f" .Records.ComputeMedianCallingTime.Minutes}} minutes.
 
-The longest call lasted approximately {{printf "%.0f" .LongestCall.Billsec.Minutes}} minutes and happened between {{.LongestCall.CallerId}} and {{.LongestCall.Dst}}.
+{{$call := .Records.GetLongestCall}}The longest call lasted approximately {{printf "%.0f" $call.Duration.Minutes}} minutes and happened between {{$call.CallerId}} and {{$call.Dst}}.
 
-There were {{.NumberOfCalls}} calls in total.
+There were {{len .Records}} calls in total.
