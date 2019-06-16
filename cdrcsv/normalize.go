@@ -5,12 +5,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //RemoveParallelCalls removes all parallel calls from the cdr file. Parallel calls are created in an CDR if
 //the Dial-App contains an '&'-sign. Example DIAL(SIP/phone1&SIP/phone2) will create two CDR lines with
 //nearly identical content, even the unique id is identical. Be careful to distinguish parallel calls from
-//transferred calls, which also are nearly identical but their Answer time differs. See also:
+//transferred calls, which also are nearly identical but their Start time differs. See also:
 //https://wiki.asterisk.org/wiki/display/AST/Asterisk+12+CDR+Specification#Asterisk12CDRSpecification
 func (f *File) CloneWithParallelCallsRemoved() File {
 	candiates := make(map[int]*[]*Record)
@@ -47,20 +48,23 @@ func recordsAreParallel(r1 *Record, r2 *Record) bool {
 	time1, _ := strconv.Atoi(uniqueId1[0])
 	time2, _ := strconv.Atoi(uniqueId2[0])
 
+	if uniqueId1[1] != uniqueId2[1] {
+		return false
+	}
+
 	if math.Abs(float64(time1-time2)) > 2 {
 		return false
 	}
 
-	return r1.Src == r2.Src &&
-		r1.Dst == r2.Dst &&
-		r1.Dcontext == r2.Dcontext &&
-		r1.LastApp == r2.LastApp &&
-		r1.LastData == r2.LastData &&
-		r1.CallerId == r2.CallerId &&
-		uniqueId1[1] == uniqueId2[1] &&
-		r1.AmaFlag == r2.AmaFlag &&
-		r1.Accountcode == r2.Accountcode &&
-		r1.Channel == r2.Channel
+	start1, _ := time.Parse(DateFormat, r1.Start)
+	start2, _ := time.Parse(DateFormat, r2.Start)
+	diff := start2.Sub(start1).Seconds()
+	if math.Abs(float64(diff)) > 2 {
+		//If this if-block is executed, the two calls have the same uniqueId[0] and the same sequence number (uniqueId[1])
+		//But obviously, their start times differ, so they are transferred calls.
+		return false
+	}
+	return true
 }
 
 func getAnsweredRecordIfExists(records []*Record) *Record {

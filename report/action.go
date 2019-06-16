@@ -23,17 +23,21 @@ func applyCountings(countings []CountingsDefinition, records []*cdrcsv.Record) m
 }
 
 type Settings struct {
-	ReportDefFile string
-	TemplateFile  string
-	CdrFile       string
-	PlainText     bool
-	Writer        io.Writer
+	ReportDefFile  string
+	TemplateFile   string
+	CdrFile        string
+	PlainText      bool
+	Writer         io.Writer
+	RemoveParallel bool
 }
 
 func GeneratePlainTextReport(settings Settings) error {
 	file, err := cdrcsv.ReadWithoutHeaderFromFile(settings.CdrFile)
 	if err != nil {
 		return fmt.Errorf("could not read cdr csv file %s: %v", settings.CdrFile, err)
+	}
+	if settings.RemoveParallel {
+		file = file.CloneWithParallelCallsRemoved()
 	}
 	statsFile, err := newStatsFile(file)
 	if err != nil {
@@ -56,6 +60,9 @@ func GenerateHtmlReport(settings Settings) error {
 	file, err := cdrcsv.ReadWithoutHeaderFromFile(settings.CdrFile)
 	if err != nil {
 		return fmt.Errorf("could not read cdr csv file %s: %v", settings.CdrFile, err)
+	}
+	if settings.RemoveParallel {
+		file = file.CloneWithParallelCallsRemoved()
 	}
 	statsFile, err := newStatsFile(file)
 	if err != nil {
