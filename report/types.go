@@ -163,7 +163,6 @@ func newStatsFile(file cdrcsv.File) (StatsFile, error) {
 }
 
 type Report struct {
-	Stats       map[string]int
-	Records     StatsFile
-	LongestCall Record
+	Stats   map[string]int
+	Records StatsFile
 }

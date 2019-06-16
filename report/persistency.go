@@ -98,7 +98,6 @@ func convertFormula(formula jsonFormula) (Matcher, error) {
 		}
 		provider := func(record *cdrcsv.Record) string {
 			val := reflect.ValueOf(*record)
-			//TODO fields Duration and Billsec are now of type time.Duration, so String() will deliver milliseconds, which is wrong!
 			return val.FieldByName(formula.Column).String()
 		}
 		expression, err := regexp.Compile(formula.Regex)

@@ -30,7 +30,7 @@ func TestApplyCountings(t *testing.T) {
 	}
 }
 
-func TestGenerateReport(t *testing.T) {
+func TestGenerateHtmlReport(t *testing.T) {
 	writer := new(bytes.Buffer)
 	settings := Settings{
 		Writer:        writer,
@@ -38,7 +38,7 @@ func TestGenerateReport(t *testing.T) {
 		TemplateFile:  "../mockdata/reportTemplate.tmpl",
 		CdrFile:       "../mockdata/smallcdr.csv",
 	}
-	err := GenerateReport(settings)
+	err := GenerateHtmlReport(settings)
 	if err != nil {
 		t.Errorf("%v", err)
 		return
@@ -54,6 +54,37 @@ The average calling time was approximately 5 minutes.
 The median calling time was approximately 2 minutes.
 
 The longest call lasted approximately 19 minutes and happened between &#34;&#34; &lt;334-442-8436&gt; and 397-815-2211.
+
+There were 45 calls in total.`
+	if actual != expected {
+		t.Errorf("Expected text:\n%s\n\nActual text:\n%s", expected, actual)
+	}
+}
+
+func TestGeneratePlainReport(t *testing.T) {
+	writer := new(bytes.Buffer)
+	settings := Settings{
+		Writer:        writer,
+		ReportDefFile: "../mockdata/reportDefinition.json",
+		TemplateFile:  "../mockdata/reportTemplate.tmpl",
+		CdrFile:       "../mockdata/smallcdr.csv",
+	}
+	err := GeneratePlainTextReport(settings)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
+	actual := writer.String()
+	expected := `This is a sample call detail report:
+
+Production Calls: 17
+Calls in the evening hours: 3
+Calls from Magdalene Greenman and Farlie Brager: 4
+
+The average calling time was approximately 5 minutes.
+The median calling time was approximately 2 minutes.
+
+The longest call lasted approximately 19 minutes and happened between "" <334-442-8436> and 397-815-2211.
 
 There were 45 calls in total.`
 	if actual != expected {

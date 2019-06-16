@@ -3,8 +3,9 @@ package report
 import (
 	"fmt"
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
-	"html/template"
+	html "html/template"
 	"io"
+	text "text/template"
 )
 
 func applyCountings(countings []CountingsDefinition, records []*cdrcsv.Record) map[string]int {
@@ -25,25 +26,49 @@ type Settings struct {
 	ReportDefFile string
 	TemplateFile  string
 	CdrFile       string
+	PlainText     bool
 	Writer        io.Writer
 }
 
-func GenerateReport(settings Settings) error {
+func GeneratePlainTextReport(settings Settings) error {
 	file, err := cdrcsv.ReadWithoutHeaderFromFile(settings.CdrFile)
 	if err != nil {
 		return fmt.Errorf("could not read cdr csv file %s: %v", settings.CdrFile, err)
+	}
+	statsFile, err := newStatsFile(file)
+	if err != nil {
+		return fmt.Errorf("could not create statistics: %v", err)
 	}
 	reportDefinition, err := ParseDefinitionFromFile(settings.ReportDefFile)
 	if err != nil {
 		return fmt.Errorf("could not parse definition file %s: %v", settings.ReportDefFile, err)
 	}
-	templateDefinition, err := template.ParseFiles(settings.TemplateFile)
+
+	templateDefinition, err := text.ParseFiles(settings.TemplateFile)
 	if err != nil {
 		return fmt.Errorf("could not parse the template file %s: %v", settings.TemplateFile, err)
+	}
+	generatedReport := Report{Stats: applyCountings(reportDefinition.Countings, file.Records), Records: statsFile}
+	return templateDefinition.Execute(settings.Writer, generatedReport)
+}
+
+func GenerateHtmlReport(settings Settings) error {
+	file, err := cdrcsv.ReadWithoutHeaderFromFile(settings.CdrFile)
+	if err != nil {
+		return fmt.Errorf("could not read cdr csv file %s: %v", settings.CdrFile, err)
 	}
 	statsFile, err := newStatsFile(file)
 	if err != nil {
 		return fmt.Errorf("could not create statistics: %v", err)
+	}
+	reportDefinition, err := ParseDefinitionFromFile(settings.ReportDefFile)
+	if err != nil {
+		return fmt.Errorf("could not parse definition file %s: %v", settings.ReportDefFile, err)
+	}
+
+	templateDefinition, err := html.ParseFiles(settings.TemplateFile)
+	if err != nil {
+		return fmt.Errorf("could not parse the template file %s: %v", settings.TemplateFile, err)
 	}
 	generatedReport := Report{Stats: applyCountings(reportDefinition.Countings, file.Records), Records: statsFile}
 	return templateDefinition.Execute(settings.Writer, generatedReport)
