@@ -48,5 +48,5 @@ type ReportDefinition struct {
 }
 
 type Report struct {
-	stats map[string]int
+	Stats map[string]int
 }

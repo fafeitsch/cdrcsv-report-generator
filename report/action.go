@@ -1,7 +1,10 @@
 package report
 
 import (
+	"fmt"
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
+	"html/template"
+	"io"
 )
 
 func applyCountings(countings []CountingsDefinition, records []*cdrcsv.Record) map[string]int {
@@ -18,6 +21,26 @@ func applyCountings(countings []CountingsDefinition, records []*cdrcsv.Record) m
 	return result
 }
 
-func GenerateReport(definition ReportDefinition, records []*cdrcsv.Record) Report {
-	return Report{stats: applyCountings(definition.Countings, records)}
+type Settings struct {
+	ReportDefFile string
+	TemplateFile  string
+	CdrFile       string
+	Writer        io.Writer
+}
+
+func GenerateReport(settings Settings) error {
+	file, err := cdrcsv.ReadWithoutHeaderFromFile(settings.CdrFile)
+	if err != nil {
+		return fmt.Errorf("could not read cdr csv file %s: %v", settings.CdrFile, err)
+	}
+	reportDefinition, err := ParseDefinitionFromFile(settings.ReportDefFile)
+	if err != nil {
+		return fmt.Errorf("could not parse definition file %s: %v", settings.ReportDefFile, err)
+	}
+	templateDefinition, err := template.ParseFiles(settings.TemplateFile)
+	if err != nil {
+		return fmt.Errorf("could not parse the template file %s: %v", settings.TemplateFile, err)
+	}
+	generatedReport := Report{Stats: applyCountings(reportDefinition.Countings, file.Records)}
+	return templateDefinition.Execute(settings.Writer, generatedReport)
 }

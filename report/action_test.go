@@ -1,6 +1,7 @@
 package report
 
 import (
+	"bytes"
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	"testing"
 )
@@ -27,5 +28,28 @@ func TestApplyCountings(t *testing.T) {
 			t.Errorf("Expected value for field \"%s\" was %d, but actual was %d.", key, value, actualMap[key])
 		}
 	}
+}
 
+func TestGenerateReport(t *testing.T) {
+	writer := new(bytes.Buffer)
+	settings := Settings{
+		Writer:        writer,
+		ReportDefFile: "../mockdata/reportDefinition.json",
+		TemplateFile:  "../mockdata/reportTemplate.tmpl",
+		CdrFile:       "../mockdata/smallcdr.csv",
+	}
+	err := GenerateReport(settings)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
+	actual := writer.String()
+	expected := `This is a sample call detail report:
+
+Production Calls: 17
+Calls in the evening hours: 3
+Calls from Magdalene Greenman and Farlie Brager: 4`
+	if actual != expected {
+		t.Errorf("Expected text:\n%s\n\nActual text:\n%s", expected, actual)
+	}
 }

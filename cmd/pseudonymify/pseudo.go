@@ -1,4 +1,4 @@
-package pseudonymify
+package main
 
 import (
 	"flag"

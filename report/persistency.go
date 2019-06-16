@@ -31,7 +31,7 @@ type jsonReport struct {
 }
 
 func ParseDefinitionFromFile(filename string) (ReportDefinition, error) {
-	jsonFile, err := os.Open("../mockdata/reportDefinition.json")
+	jsonFile, err := os.Open(filename)
 	if err != nil {
 		return ReportDefinition{}, err
 	}
