@@ -16,6 +16,7 @@ import (
 func (f *File) CloneWithParallelCallsRemoved() File {
 	candiates := make(map[int]*[]*Record)
 	origLocation := make(map[string]int)
+	result := make([]*Record, 0, len(f.Records))
 	for index, record := range f.Records {
 		callId, _ := strconv.Atoi(strings.Split(record.UniqueId, ".")[1])
 		origLocation[record.UniqueId] = index
@@ -29,10 +30,12 @@ func (f *File) CloneWithParallelCallsRemoved() File {
 			if recordsAreParallel(record, peer) {
 				appendList := append(*list, record)
 				candiates[callId] = &appendList
+			} else {
+				//the two calls are not parallel, so the second one must be included in the result
+				result = append(result, record)
 			}
 		}
 	}
-	result := make([]*Record, 0, len(f.Records))
 	for _, records := range candiates {
 		result = append(result, getAnsweredRecordIfExists(*records))
 	}
