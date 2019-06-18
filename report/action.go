@@ -5,6 +5,7 @@ import (
 	"github.com/fafeitsch/open-callopticum/cdrcsv"
 	html "html/template"
 	"io"
+	"path/filepath"
 	text "text/template"
 )
 
@@ -72,8 +73,15 @@ func GenerateHtmlReport(settings Settings) error {
 	if err != nil {
 		return fmt.Errorf("could not parse definition file %s: %v", settings.ReportDefFile, err)
 	}
-
-	templateDefinition, err := html.ParseFiles(settings.TemplateFile)
+	name := filepath.Base(settings.TemplateFile)
+	templateDefinition, err := html.New(name).Funcs(html.FuncMap{
+		"diff": func(minuend int, subtrahend int) int {
+			return minuend - subtrahend
+		},
+		"add": func(summand1 int, summand2 int) int {
+			return summand1 + summand2
+		},
+	}).ParseFiles(settings.TemplateFile)
 	if err != nil {
 		return fmt.Errorf("could not parse the template file %s: %v", settings.TemplateFile, err)
 	}
