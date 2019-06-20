@@ -28,38 +28,14 @@ go run report.go -template ~/reportTemplate.gohtml -definition ~/reportDefinitio
 
 Per default, this command escapes special HTML characters. If you do not want this, pass the `-plain` argument.
 
-First, you need a JSON file containing a definition what you want
-to count, like this:
+First, you need a JSON file containing a definition what you want to count. See [reportDefinition](mockdata/reportDefinition.json)
+for an example. The allowed column names can be found in in [parse.go](cdrcsv/parse.go).
 
-````$json
-{
-  "countings": [
-    {
-      "name": "headquarter_calls",
-      "formula": {
-        "column": "Dcontext"
-        "regex": "hq"
-      }
-    }
-  ]
-} 
-````
-Effectively, this JSON file counts all cdr records whose `Dcontext` column matches `hq`. A list of all column names
-can be found in [parse.go](cdrcsv/parse.go).
-
-Second, you need the actual report template as text file or html file. Example:
-
-````
-There were {{index .Stats "headquarter_calls"}} calls from the headquarter
-````
+Second, you need the actual report template as text file or html file, for example [reportTemplate](mockdata/reportTemplate.tmpl)
 
 The syntax is Go's template engine syntax and with the `{{index .Stats "stat_name"}}` you can access the statistics
-defined in your JSON file.
-
-Addtionally, you can use `.Records` to get a list of all records in the csv file you provided and `.GetLongestCall`
-to get the longest call. Self explanatory are the commands `{{.Records.ComputeAverageCallingTime.Minutes}}` and
-`{{.Records.ComputeMedianCallingTime.Minutes}}`. For more examples view the file `mockdata/reportTemplate.tmpl` and
-the [Go Template Specification](https://blog.gopheracademy.com/advent-2017/using-go-templates/).
+defined in your JSON file. See the linked file for more examples on how to use template files. Additionally, you can 
+make use of the [Go Template Specification](https://blog.gopheracademy.com/advent-2017/using-go-templates/).
 ### CDR Pseudonymization
 
 In order to test the other features of Open Callopticum I had to write a tool that replaces personal data in CDR records
