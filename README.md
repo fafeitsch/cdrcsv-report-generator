@@ -28,10 +28,10 @@ go run report.go -template ~/reportTemplate.gohtml -definition ~/reportDefinitio
 
 Per default, this command escapes special HTML characters. If you do not want this, pass the `-plain` argument.
 
-First, you need a JSON file containing a definition what you want to count. See [reportDefinition](mockdata/reportDefinition.json)
+First, you need a JSON file containing a definition what you want to count. See [reportDefinition.json](mockdata/reportDefinition.json)
 for an example. The allowed column names can be found in in [parse.go](cdrcsv/parse.go).
 
-Second, you need the actual report template as text file or html file, for example [reportTemplate](mockdata/reportTemplate.tmpl)
+Second, you need the actual report template as text file or html file, for example [reportTemplate.tmpl](mockdata/reportTemplate.tmpl)
 
 The syntax is Go's template engine syntax and with the `{{index .Stats "stat_name"}}` you can access the statistics
 defined in your JSON file. See the linked file for more examples on how to use template files. Additionally, you can 
