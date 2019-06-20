@@ -1,9 +1,11 @@
 {{- /*gotype: github.com/fafeitsch/open-callopticum/report.Report*/ -}}
 This is a sample call detail report:
 
-Production Calls: {{index .Stats "production_calls"}}
-Calls in the evening hours: {{index .Stats "evening_hours"}}
-Calls from Magdalene Greenman and Farlie Brager: {{index .Stats "employees"}}
+{{$prodcalls := index .Stats "production_calls"}}Production Calls: {{$prodcalls}}
+{{$eveninghours := index .Stats "evening_hours"}}Calls in the evening hours: {{$eveninghours}}
+{{$employees := index .Stats "employees"}}Calls from Magdalene Greenman and Farlie Brager: {{$employees}}
+
+{{$total := add (add $prodcalls $eveninghours) $employees -}}The sum of these calls is {{$total}}.
 
 The average calling time was approximately {{printf "%.0f" .Records.ComputeAverageCallingTime.Minutes}} minutes.
 The median calling time was approximately {{printf "%.0f" .Records.ComputeMedianCallingTime.Minutes}} minutes.
@@ -11,3 +13,4 @@ The median calling time was approximately {{printf "%.0f" .Records.ComputeMedian
 {{$call := .Records.GetLongestCall}}The longest call lasted approximately {{printf "%.0f" $call.Duration.Minutes}} minutes and happened between {{$call.CallerId}} and {{$call.Dst}}.
 
 There were {{len .Records}} calls in total.
+{{diff (len .Records) $total}} calls are not covered by above statistics.
