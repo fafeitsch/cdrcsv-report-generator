@@ -16,7 +16,7 @@ produce daily email reports to prevent telephone fraud.
 
 **Note** In some jurisdictions there are privacy laws protecting the data of your employees or customers. Be sure
 to comply with the law of your jurisdiction when generating reports. For example, in Europe, GDPR prohibits reports
-that concern phoning behaviour of particular employees. Ask your lawyer to be on the save side.
+that concern phoning behaviour of particular employees. Ask your lawyer to be on the safe side.
 
 To generate reports, you need to write two files, a report definition and a template definition. Then a report
 can be generated like this:
