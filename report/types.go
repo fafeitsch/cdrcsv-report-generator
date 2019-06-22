@@ -132,6 +132,9 @@ func (s StatsFile) ComputeMedianCallingTime() time.Duration {
 		}
 		callTimes = append(callTimes, record.Billsec.Seconds())
 	}
+	if len(callTimes) == 0 {
+		return 0
+	}
 	sort.Float64s(callTimes)
 	half := int(math.Ceil(0.5*float64(len(callTimes))) - 1)
 	return time.Duration(callTimes[half]) * time.Second

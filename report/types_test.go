@@ -43,6 +43,24 @@ func TestFile_ComputeMeanCallingTime(t *testing.T) {
 	}
 }
 
+func TestFile_ComputeEmptyStats(t *testing.T) {
+	records := make([]*cdrcsv.Record, 0)
+	file := cdrcsv.File{Records: records}
+	statsFile, err := newStatsFile(file)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
+	actual := statsFile.ComputeMedianCallingTime()
+	if actual != 0 {
+		t.Errorf("Median of no calls should be 0, but was %d", actual)
+	}
+	actual = statsFile.ComputeAverageCallingTime()
+	if actual != 0 {
+		t.Errorf("Average of no calls should be 0, but was %d.", actual)
+	}
+}
+
 func TestFile_GetLongestCall(t *testing.T) {
 	file, err := cdrcsv.ReadWithoutHeaderFromFile("../mockdata/smallcdr.csv")
 	if err != nil {
