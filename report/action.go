@@ -2,7 +2,7 @@ package report
 
 import (
 	"fmt"
-	"github.com/fafeitsch/open-callopticum/cdrcsv"
+	"github.com/fafeitsch/cdrcsv-report-generator/cdrcsv"
 	html "html/template"
 	"io"
 	"path/filepath"

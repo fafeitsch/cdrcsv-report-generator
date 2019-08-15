@@ -2,7 +2,7 @@ package report
 
 import (
 	"bytes"
-	"github.com/fafeitsch/open-callopticum/cdrcsv"
+	"github.com/fafeitsch/cdrcsv-report-generator/cdrcsv"
 	"testing"
 )
 

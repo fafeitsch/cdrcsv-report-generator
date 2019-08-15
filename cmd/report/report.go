@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/fafeitsch/open-callopticum/report"
+	"github.com/fafeitsch/cdrcsv-report-generator/report"
 	"os"
 )
 

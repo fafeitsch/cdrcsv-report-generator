@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fafeitsch/open-callopticum/cdrcsv"
+	"github.com/fafeitsch/cdrcsv-report-generator/cdrcsv"
 	"io"
 	"os"
 	"reflect"

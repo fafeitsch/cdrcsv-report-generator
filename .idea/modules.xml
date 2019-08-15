@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../open-callopticum/.idea/open-callopticum.iml" filepath="$PROJECT_DIR$/../open-callopticum/.idea/open-callopticum.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../cdrcsv-report-generator/.idea/cdrcsv-report-generator.iml" filepath="$PROJECT_DIR$/../cdrcsv-report-generator/.idea/cdrcsv-report-generator.iml" />
     </modules>
   </component>
 </project>
