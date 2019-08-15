@@ -153,6 +153,14 @@ func (s StatsFile) GetLongestCall() *Record {
 	return call
 }
 
+func (s StatsFile) ComputeTotalTime() time.Duration {
+	sum := time.Duration(0) * time.Second
+	for _, record := range s {
+		sum = sum + record.Billsec
+	}
+	return sum
+}
+
 func newStatsFile(file cdrcsv.File) (StatsFile, error) {
 	result := make(StatsFile, 0, 0)
 	for index, record := range file.Records {

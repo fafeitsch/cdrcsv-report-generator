@@ -43,6 +43,22 @@ func TestFile_ComputeMeanCallingTime(t *testing.T) {
 	}
 }
 
+func TestStatsFile_ComputeTotalTime(t *testing.T) {
+	file, err := cdrcsv.ReadWithoutHeaderFromFile("../mockdata/smallcdr.csv")
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	statsFile, err := newStatsFile(file)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	actual := statsFile.ComputeTotalTime()
+	expected := 7408 * time.Second
+	if actual != expected {
+		t.Errorf("Expected total calling time is %f, but was %f", expected.Seconds(), actual.Seconds())
+	}
+}
+
 func TestFile_ComputeEmptyStats(t *testing.T) {
 	records := make([]*cdrcsv.Record, 0)
 	file := cdrcsv.File{Records: records}

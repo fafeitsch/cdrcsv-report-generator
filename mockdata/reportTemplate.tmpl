@@ -9,6 +9,7 @@ This is a sample call detail report:
 
 The average calling time was approximately {{printf "%.0f" .Records.ComputeAverageCallingTime.Minutes}} minutes.
 The median calling time was approximately {{printf "%.0f" .Records.ComputeMedianCallingTime.Minutes}} minutes.
+The total calling time was approximately {{printf "%.0f" .Records.ComputeTotalTime.Minutes}} minutes.
 
 {{$call := .Records.GetLongestCall}}The longest call lasted approximately {{printf "%.0f" $call.Duration.Minutes}} minutes and happened between {{$call.CallerId}} and {{$call.Dst}}.
 

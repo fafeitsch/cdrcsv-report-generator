@@ -54,6 +54,7 @@ The sum of these calls is 24.
 
 The average calling time was approximately 5 minutes.
 The median calling time was approximately 2 minutes.
+The total calling time was approximately 123 minutes.
 
 The longest call lasted approximately 19 minutes and happened between &#34;&#34; &lt;334-442-8436&gt; and 397-815-2211.
 
@@ -89,6 +90,7 @@ The sum of these calls is 23.
 
 The average calling time was approximately 5 minutes.
 The median calling time was approximately 2 minutes.
+The total calling time was approximately 123 minutes.
 
 The longest call lasted approximately 19 minutes and happened between &#34;&#34; &lt;334-442-8436&gt; and 397-815-2211.
 
@@ -123,6 +125,7 @@ The sum of these calls is 24.
 
 The average calling time was approximately 5 minutes.
 The median calling time was approximately 2 minutes.
+The total calling time was approximately 123 minutes.
 
 The longest call lasted approximately 19 minutes and happened between "" <334-442-8436> and 397-815-2211.
 
@@ -158,6 +161,7 @@ The sum of these calls is 23.
 
 The average calling time was approximately 5 minutes.
 The median calling time was approximately 2 minutes.
+The total calling time was approximately 123 minutes.
 
 The longest call lasted approximately 19 minutes and happened between "" <334-442-8436> and 397-815-2211.
 
